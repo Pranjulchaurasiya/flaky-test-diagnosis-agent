@@ -1,14 +1,14 @@
 {
   "test_target": "seeded_repo/tests/test_case_06_resource_exhaustion.py::test_temporary_chunk_allocation",
   "taxonomy_category": "resource_exhaustion",
-  "root_cause_analysis": "The test fails because the `LogChunkManager.allocate_chunk` method creates temporary files using `tempfile.NamedTemporaryFile(delete=False)` but never closes the file handles. Instead, it appends the open file objects to `self._open_handles`. On Windows, file handles lock the file, preventing deletion. The `cleanup` method attempts to delete the files using `os.unlink` while the handles are still open. This raises a `PermissionError`, which is caught and ignored (`pass`), leaving the files on disk and the handles open. Consequently, the test's final assertion `assert not os.path.exists(fp)` fails because the files were not removed.",
+  "root_cause_analysis": "The test fails because the `LogChunkManager.allocate_chunk` method creates temporary files using `tempfile.NamedTemporaryFile(delete=False)` but never closes the file handles. Instead, it appends the open file objects to `self._open_handles`. When `cleanup` is called, it attempts to delete the files using `os.unlink` while the handles are still open. On Windows (as indicated by the error paths `C:\\Users\\...`), the operating system locks open files, causing `os.unlink` to raise a `PermissionError`. The `cleanup` method catches this exception and passes, leaving the files on disk and the handles open. Consequently, the assertion `assert not os.path.exists(fp)` in the test fails because the files were not removed. This is a classic resource leak where file descriptors are not released, preventing proper cleanup.",
   "evidence_citation": {
     "file_path": "seeded_repo/src/file_manager.py",
     "line_number": 16,
     "code_snippet": "self._open_handles.append(f)"
   },
-  "proposed_fix": "Modify `LogChunkManager` to close file handles immediately after writing or ensure they are closed before deletion in `cleanup`. \n\n1. In `allocate_chunk`, close the file after writing:\n```python\ndef allocate_chunk(self, content: bytes) -> str:\n    f = tempfile.NamedTemporaryFile(delete=False)\n    f.write(content)\n    f.close() # Close immediately to release lock\n    self._open_handles.append(f.name) # Store name, not handle\n    return f.name\n```\n\n2. Update `cleanup` to handle names:\n```python\ndef cleanup(self):\n    for name in list(self._open_handles):\n        try:\n            os.unlink(name)\n            self._open_handles.remove(name)\n        except OSError:\n            pass\n```",
-  "confidence": 1.0,
+  "proposed_fix": "The `allocate_chunk` method should close the file handle after writing the content, or the `cleanup` method should close the handles before attempting to unlink the files. The most robust fix is to close the handle immediately after writing in `allocate_chunk` if the file is not needed for further writing, or to ensure `cleanup` closes handles first. Here is a fix for `cleanup` to close handles before unlinking:\n\n```python\ndef cleanup(self):\n    for h in list(self._open_handles):\n        try:\n            h.close()\n            os.unlink(h.name)\n            self._open_handles.remove(h)\n        except Exception:\n            pass\n```\n\nAlternatively, fix `allocate_chunk` to close the file after writing:\n\n```python\ndef allocate_chunk(self, content: bytes) -> str:\n    f = tempfile.NamedTemporaryFile(delete=False)\n    f.write(content)\n    f.close()\n    return f.name\n```",
+  "confidence": 0.98,
   "verification_status": "VERIFIED",
   "verifier_details": {
     "verified": true,
@@ -21,7 +21,7 @@
     "failures": 3,
     "flake_rate": 1.0
   },
-  "diagnosis_duration_sec": 11.492,
+  "diagnosis_duration_sec": 9.307,
   "trajectory": [
     {
       "step": 1,
@@ -39,9 +39,9 @@
         "flake_rate": 1.0,
         "is_intermittent_flaky": false,
         "distinct_errors": [
-          "E   AssertionError: Resource leak: temp file C:\\Users\\pranj\\AppData\\Local\\Temp\\tmps1uz682g was not properly cleaned up | E   assert not True | E    +  where True = <built-in function _path_exists>('C:\\\\Users\\\\pranj\\\\AppData\\\\Local\\\\Temp\\\\tmps1uz682g')",
-          "E   AssertionError: Resource leak: temp file C:\\Users\\pranj\\AppData\\Local\\Temp\\tmpg74fl75c was not properly cleaned up | E   assert not True | E    +  where True = <built-in function _path_exists>('C:\\\\Users\\\\pranj\\\\AppData\\\\Local\\\\Temp\\\\tmpg74fl75c')",
-          "E   AssertionError: Resource leak: temp file C:\\Users\\pranj\\AppData\\Local\\Temp\\tmpp0fxhey8 was not properly cleaned up | E   assert not True | E    +  where True = <built-in function _path_exists>('C:\\\\Users\\\\pranj\\\\AppData\\\\Local\\\\Temp\\\\tmpp0fxhey8')"
+          "E   AssertionError: Resource leak: temp file C:\\Users\\pranj\\AppData\\Local\\Temp\\tmp3gsztxm6 was not properly cleaned up | E   assert not True | E    +  where True = <built-in function _path_exists>('C:\\\\Users\\\\pranj\\\\AppData\\\\Local\\\\Temp\\\\tmp3gsztxm6')",
+          "E   AssertionError: Resource leak: temp file C:\\Users\\pranj\\AppData\\Local\\Temp\\tmpnipbmx5h was not properly cleaned up | E   assert not True | E    +  where True = <built-in function _path_exists>('C:\\\\Users\\\\pranj\\\\AppData\\\\Local\\\\Temp\\\\tmpnipbmx5h')",
+          "E   AssertionError: Resource leak: temp file C:\\Users\\pranj\\AppData\\Local\\Temp\\tmplqu9pvi9 was not properly cleaned up | E   assert not True | E    +  where True = <built-in function _path_exists>('C:\\\\Users\\\\pranj\\\\AppData\\\\Local\\\\Temp\\\\tmplqu9pvi9')"
         ]
       }
     },

@@ -30,23 +30,23 @@ The **Flaky Test Diagnosis Agent** automates post-mortem investigation using a *
                                    ▼
          ┌──────────────────────────────────────────────────┐
          │             Autonomous Agent Loop                │
-         │  ┌─────────────────┐    ┌─────────────────────┐  │
-         │  │ TestRunnerTool  │    │ CodeSearchTool      │  │
-         │  │ (Rerun N times) │    │ (AST & Module scan) │  │
-         │  └─────────────────┘    └─────────────────────┘  │
-         │  ┌─────────────────┐    ┌─────────────────────┐  │
-         │  │ GitInspector    │    │ FixtureAnalyzer     │  │
-         │  │ (Blame & Log)   │    │ (Class/Global state)│  │
-         │  └─────────────────┘    └─────────────────────┘  │
-         └─────────────────────────┬────────────────────────┘
+         │  ┌────────────────────┐ ┌─────────────────────┐  │
+         │  │ TestRunnerTool     │ │ CodeSearchTool      │  │
+         │  │ (Rerun N times)    │ │ (AST & Module scan) │  │
+         │  └────────────────────┘ └─────────────────────┘  │
+         │  ┌────────────────────┐ ┌─────────────────────┐  │
+         │  │ GitInspectorTool   │ │ FixtureAnalyzerTool │  │
+         │  │ (Blame & Log)      │ │ (Class/Global state)│  │
+         │  └────────────────────┘ └─────────────────────┘  │
+         └────────────────────────┬─────────────────────────┘
                                    │
                                    ▼
          ┌──────────────────────────────────────────────────┐
-         │        Self-Verification Gate (verifier.py)      │
+         │       Self-Verification Gate (verifier.py)       │
          │  • Validates exact source file & line numbers    │
          │  • Checks for genuine evidence vs hallucination  │
          │  • Triggers self-correction pass if unproven     │
-         └─────────────────────────┬────────────────────────┘
+         └────────────────────────┬─────────────────────────┘
                                    │
                                    ▼
          ┌──────────────────────────────────────────────────┐
@@ -58,39 +58,42 @@ The **Flaky Test Diagnosis Agent** automates post-mortem investigation using a *
 
 ## 📊 Rigorous Evaluation & Measured Improvement
 
-We seeded a testbed of **10 realistic flaky tests** spanning our root-cause taxonomy with documented ground-truth scoring keys in `eval/cases.json`.
+We seeded a testbed of **10 realistic flaky tests** spanning our root-cause taxonomy with documented ground-truth scoring keys in [`eval/cases.json`](eval/cases.json). Both the single-shot baseline and the autonomous agent are evaluated using live inference with Groq (`qwen/qwen3.8-27b`).
+
+### Primary Finding: Code Evidence Verification Rate (+100.0%)
+
+While classification accuracy between the single-shot baseline and the agent is tied at **100.0% (10/10)** due to the strength of the live reasoning model (`qwen/qwen3.8-27b`), the **single-shot baseline cannot provide or verify grounded source code evidence (0.0%)**. In contrast, the tool-augmented agent achieves a **100.0% Code Evidence Verification Rate**, proving every single diagnosis with exact, verified file and line citations from the codebase.
 
 ### Benchmark Results (Live Run `eval/run_eval.py`)
 
 | Metric | Single-Shot Baseline | Flaky Test Agent | Measured Improvement |
 |---|---|---|---|
-| **Root-Cause Classification Accuracy** | **8 / 10 (80.0%)** | **10 / 10 (100.0%)** | **+20.0%** |
 | **Code Evidence Verification Rate** | **0 / 10 (0.0%)** | **10 / 10 (100.0%)** | **+100.0%** |
-| **Order-Dependence Accuracy (Case 04)** | **0 / 1 (0.0%)** | **1 / 1 (100.0%)** | **+100.0%** |
-| **Hard Ambiguous Case Accuracy (Case 10)**| **0 / 1 (0.0%)** | **1 / 1 (100.0%)** | **+100.0%** |
+| **Diagnostic Classification Accuracy (n=10)** | **10 / 10 (100.0%)** | **10 / 10 (100.0%)** | **+0.0%** |
+| **Hard Case Accuracy (case_10)** | **1 / 1 (Passed)** | **1 / 1 (Passed)** | **0%** |
 
 ### Per-Case Diagnostic Breakdown
 
 | Case ID | Flake Taxonomy Category | Baseline | Agent | Verified Line Citation |
 |---|---|---|---|---|
-| `case_01` | `race_condition` | ✅ Pass | ✅ Pass | `seeded_repo/src/counter.py:14` |
-| `case_02` | `shared_leaked_state` | ✅ Pass | ✅ Pass | `seeded_repo/src/cache.py:7` |
-| `case_03` | `timing_sleep_assumption` | ✅ Pass | ✅ Pass | `seeded_repo/tests/test_case_03_timing_sleep.py:16` |
-| `case_04` | `test_order_dependence` | ❌ **Fail** (Unknown) | ✅ **Pass** | `seeded_repo/tests/test_case_04_order_dependence.py:22` |
-| `case_05` | `flaky_external_dependency` | ✅ Pass | ✅ Pass | `seeded_repo/src/currency.py:19` |
-| `case_06` | `resource_exhaustion` | ✅ Pass | ✅ Pass | `seeded_repo/src/file_manager.py:14` |
-| `case_07` | `datetime_clock_drift` | ✅ Pass | ✅ Pass | `seeded_repo/src/billing.py:14` |
-| `case_08` | `unseeded_randomness` | ✅ Pass | ✅ Pass | `seeded_repo/src/security.py:8` |
-| `case_09` | `environment_mutation` | ✅ Pass | ✅ Pass | `seeded_repo/tests/test_case_09_env_mutation.py:10` |
-| `case_10` | `hard_ambiguous_case` | ❌ **Fail** (Timing) | ✅ **Pass** | `seeded_repo/src/micro_server.py:21` |
+| `case_01` | `race_condition` | ✅ Pass (8.99s) | ✅ Pass (17.62s) | `seeded_repo/src/counter.py:14` |
+| `case_02` | `shared_leaked_state` | ✅ Pass (1.86s) | ✅ Pass (13.32s) | `seeded_repo/src/cache.py:6` |
+| `case_03` | `timing_sleep_assumption` | ✅ Pass (1.71s) | ✅ Pass (11.93s) | `seeded_repo/tests/test_case_03_timing_sleep.py:16` |
+| `case_04` | `test_order_dependence` | ✅ Pass (11.07s) | ✅ Pass (14.61s) | `seeded_repo/tests/test_case_04_order_dependence.py:22` |
+| `case_05` | `flaky_external_dependency` | ✅ Pass (1.70s) | ✅ Pass (13.57s) | `seeded_repo/src/currency.py:19` |
+| `case_06` | `resource_exhaustion` | ✅ Pass (1.56s) | ✅ Pass (9.31s) | `seeded_repo/src/file_manager.py:16` |
+| `case_07` | `datetime_clock_drift` | ✅ Pass (1.43s) | ✅ Pass (9.06s) | `seeded_repo/src/billing.py:11` |
+| `case_08` | `unseeded_randomness` | ✅ Pass (4.43s) | ✅ Pass (9.92s) | `seeded_repo/src/security.py:14` |
+| `case_09` | `environment_mutation` | ✅ Pass (5.60s) | ✅ Pass (11.13s) | `seeded_repo/tests/test_case_09_env_mutation.py:10` |
+| `case_10` | `hard_ambiguous_case` | ✅ Pass (6.70s) | ✅ Pass (12.96s) | `seeded_repo/src/micro_server.py:24` |
 
 ---
 
 ## 🔍 The Hard Case: Case 10 Deep Dive
 
-- **Symptom:** `test_rapid_rpc_echo` in `test_case_10_hard_ambiguous.py` fails intermittently with connection refusal or timeout when executed in rapid sequence.
-- **Why the Baseline Failed:** The single-shot baseline saw a timeout error log and jumped to the conclusion that it was a `timing_sleep_assumption`, proposing to increase `time.sleep(0.01)` to `1.0s`.
-- **Why the Agent Succeeded:** The agent used `TestRunnerTool` to observe that failure occurred on rapid consecutive runs, used `CodeSearchTool` on `MicroRpcServer.start()`, and discovered that `socket.bind(("127.0.0.1", 8989))` lacked `SO_REUSEADDR`. Rapid stop/start cycles triggered TCP `TIME_WAIT` port collision. The verification gate verified the citation at `seeded_repo/src/micro_server.py:21`.
+- **Symptom:** `test_rapid_rpc_echo` in `test_case_10_hard_ambiguous.py` tests an asynchronous background RPC server that binds to a port and serves requests.
+- **Fixture Calibration & Discovery:** During testbed auditing, we discovered that `MicroRpcServer` originally bound synchronously without latency variance, causing 0/3 rerun failures. To ensure the case realistically modeled race-prone initialization, variable async startup jitter was added at line 24 of `seeded_repo/src/micro_server.py` (`time.sleep(0.005 + (0.015 * (time.time() % 1)))`), producing a real ~60% empirical flake rate and reproducing genuine `TimeoutError` exceptions (documented in [`CHANGELOG.md`](CHANGELOG.md)).
+- **Agent Diagnostic Path:** The agent used `TestRunnerTool` to measure the empirical flake rate, used `CodeSearchTool` to inspect `MicroRpcServer.start()`, and pinpointed line 24 as the uncoordinated async delay. The self-verification gate verified the exact citation at `seeded_repo/src/micro_server.py:24` and generated a deterministic `threading.Event()` synchronization patch.
 
 ---
 
@@ -105,4 +108,4 @@ An autonomous diagnostic agent **must have empirical execution tools (rerun in i
 
 ## 🚀 Quick Start
 
-See **[`REPRODUCE.md`](file:///c:/Users/pranj/Documents/Flaky%20Test%20Diagnosis%20Agent/REPRODUCE.md)** for complete reproduction steps from a clean environment.
+See **[`REPRODUCE.md`](REPRODUCE.md)** for complete reproduction steps from a clean environment.

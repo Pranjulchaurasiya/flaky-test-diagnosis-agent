@@ -7,7 +7,7 @@
     "line_number": 10,
     "code_snippet": "os.environ[\"APP_ENV\"] = \"production\""
   },
-  "proposed_fix": "Use a pytest fixture to save and restore the environment variable, or use `monkeypatch` to safely set and unset the variable. \n\nExample Fix using monkeypatch:\n```python\nimport pytest\nfrom config_service import AppConfigService\n\ndef test_override_env_production(monkeypatch):\n    monkeypatch.setenv(\"APP_ENV\", \"production\")\n    assert AppConfigService.is_production() is True\n    assert AppConfigService.get_max_connections() == 100\n\ndef test_default_env_development(monkeypatch):\n    # Ensure APP_ENV is not set or is set to development\n    monkeypatch.delenv(\"APP_ENV\", raising=False)\n    assert AppConfigService.get_environment() == \"development\"\n    assert AppConfigService.get_max_connections() == 10\n```",
+  "proposed_fix": "Use a pytest fixture to save and restore the environment variable, or use `monkeypatch` to safely modify and revert environment variables. \n\nExample Fix using monkeypatch:\n```python\nimport pytest\nfrom config_service import AppConfigService\n\ndef test_override_env_production(monkeypatch):\n    monkeypatch.setenv(\"APP_ENV\", \"production\")\n    assert AppConfigService.is_production() is True\n    assert AppConfigService.get_max_connections() == 100\n\ndef test_default_env_development(monkeypatch):\n    # Ensure APP_ENV is not set or is set to development for this test\n    monkeypatch.delenv(\"APP_ENV\", raising=False)\n    assert AppConfigService.get_environment() == \"development\"\n    assert AppConfigService.get_max_connections() == 10\n```",
   "confidence": 0.98,
   "verification_status": "VERIFIED",
   "verifier_details": {
@@ -21,7 +21,7 @@
     "failures": 0,
     "flake_rate": 0.0
   },
-  "diagnosis_duration_sec": 10.334,
+  "diagnosis_duration_sec": 11.131,
   "trajectory": [
     {
       "step": 1,

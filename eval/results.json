@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-30 15:02:14",
+  "timestamp": "2026-08-30 15:53:10",
   "total_cases": 10,
   "baseline_accuracy": "10/10 (100.0%)",
   "agent_accuracy": "10/10 (100.0%)",
@@ -13,15 +13,15 @@
       "baseline": {
         "predicted_category": "race_condition",
         "is_correct": true,
-        "duration_sec": 2.535,
+        "duration_sec": 8.993,
         "confidence": 0.98,
-        "proposed_fix": "Add a `threading.Lock` to the `AsyncMetricsCounter` class and acquire it within the `increment` method to ensure atomicity of the read-modify-write operation. Example:\n\n```python\nimport threading\n\nclass AsyncMetricsCounter:\n    def __init__(self):\n        self._counts = {}\n        self._lock = threading.Lock()\n\n    def increment(self, key, value=1):\n        with self._lock:\n            self._counts[key] = self._counts.get(key, 0) + value\n\n    def get_count(self, key):\n        return self._counts.get(key, 0)\n```"
+        "proposed_fix": "Add a `threading.Lock` to the `AsyncMetricsCounter` class and acquire it around the read-modify-write operation in the `increment` method. For example:\n\n```python\nimport threading\n\nclass AsyncMetricsCounter:\n    def __init__(self):\n        self._counts = {}\n        self._lock = threading.Lock()\n\n    def increment(self, key, value=1):\n        with self._lock:\n            self._counts[key] = self._counts.get(key, 0) + value\n\n    def get_count(self, key):\n        return self._counts.get(key, 0)\n```"
       },
       "agent": {
         "predicted_category": "race_condition",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 10.052,
+        "duration_sec": 17.617,
         "confidence": 1.0,
         "evidence_citation": {
           "file_path": "seeded_repo/src/counter.py",
@@ -39,7 +39,7 @@
       "baseline": {
         "predicted_category": "shared_leaked_state",
         "is_correct": true,
-        "duration_sec": 1.407,
+        "duration_sec": 1.857,
         "confidence": 0.95,
         "proposed_fix": "To fix this issue, you can either: 1) Make `_STORE` an instance-level variable instead of a class-level variable, so each instance has its own storage. 2) Add a fixture that resets the class-level `_STORE` before each test. For example:\n\n```python\n@pytest.fixture(autouse=True)\ndef reset_cache():\n    UserSessionCache._STORE.clear()\n```\n\nThis ensures that each test starts with a clean state."
       },
@@ -47,7 +47,7 @@
         "predicted_category": "shared_leaked_state",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 8.498,
+        "duration_sec": 13.324,
         "confidence": 0.98,
         "evidence_citation": {
           "file_path": "seeded_repo/src/cache.py",
@@ -65,7 +65,7 @@
       "baseline": {
         "predicted_category": "timing_sleep_assumption",
         "is_correct": true,
-        "duration_sec": 20.407,
+        "duration_sec": 1.706,
         "confidence": 0.95,
         "proposed_fix": "Replace the hardcoded `time.sleep(0.05)` with a polling loop that waits for the job to finish with a timeout. For example:\n\n```python\nimport time\n\ndef wait_for_job_completion(runner, job_id, timeout=1.0, poll_interval=0.01):\n    start_time = time.time()\n    while time.time() - start_time < timeout:\n        if runner.is_finished(job_id):\n            return True\n        time.sleep(poll_interval)\n    return False\n\n# In the test:\nassert wait_for_job_completion(runner, job_id), (\n    f\"Job {job_id} did not complete within the timeout period.\"\n)\n```"
       },
@@ -73,14 +73,14 @@
         "predicted_category": "timing_sleep_assumption",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 8.778,
+        "duration_sec": 11.933,
         "confidence": 0.98,
         "evidence_citation": {
           "file_path": "seeded_repo/tests/test_case_03_timing_sleep.py",
           "line_number": 16,
           "code_snippet": "time.sleep(0.05)"
         },
-        "proposed_fix": "Replace the hardcoded sleep with a polling loop that waits for the job to complete with a timeout. For example:\n\n```python\ndef test_async_job_completion():\n    runner = BackgroundJobRunner()\n    job_id = \"job_export_999\"\n    runner.submit_job(job_id)\n\n    # Poll for completion with a timeout instead of fixed sleep\n    start_time = time.time()\n    timeout = 1.0  # 1 second timeout\n    while time.time() - start_time < timeout:\n        if runner.is_finished(job_id):\n            break\n        time.sleep(0.01)  # Small sleep to avoid busy waiting\n    \n    assert runner.is_finished(job_id), (\n        f\"Job {job_id} did not complete within {timeout} seconds.\"\n    )\n```"
+        "proposed_fix": "Replace the hardcoded sleep with a polling loop that waits for the job to complete with a timeout. For example:\n\n```python\nimport time\n\ndef test_async_job_completion():\n    runner = BackgroundJobRunner()\n    job_id = \"job_export_999\"\n    runner.submit_job(job_id)\n\n    # Poll for completion with a timeout instead of fixed sleep\n    start_time = time.time()\n    timeout = 1.0  # 1 second timeout\n    while time.time() - start_time < timeout:\n        if runner.is_finished(job_id):\n            break\n        time.sleep(0.01)  # Small sleep to avoid busy-waiting\n    \n    assert runner.is_finished(job_id), (\n        f\"Job {job_id} did not complete within {timeout} seconds.\"\n    )\n```"
       }
     },
     {
@@ -91,7 +91,7 @@
       "baseline": {
         "predicted_category": "test_order_dependence",
         "is_correct": true,
-        "duration_sec": 1.43,
+        "duration_sec": 11.073,
         "confidence": 0.95,
         "proposed_fix": "To fix this issue, the test `test_delete_existing_order` should create the order \"ORD-777\" within its own test setup before attempting to delete it. This ensures that the test is self-contained and does not depend on the execution order of other tests. Here is the corrected test:\n\n```python\ndef test_delete_existing_order():\n    db = InMemoryOrderDB()\n    # Create the order within the test to ensure it exists\n    db.create_order(\"ORD-777\", 250.0)\n    deleted = db.delete_order(\"ORD-777\")\n    assert deleted[\"id\"] == \"ORD-777\"\n```"
       },
@@ -99,14 +99,14 @@
         "predicted_category": "test_order_dependence",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 8.6,
-        "confidence": 1.0,
+        "duration_sec": 14.608,
+        "confidence": 0.98,
         "evidence_citation": {
           "file_path": "seeded_repo/tests/test_case_04_order_dependence.py",
           "line_number": 22,
           "code_snippet": "deleted = db.delete_order(\"ORD-777\")"
         },
-        "proposed_fix": "The test should be self-contained. It must create the order it intends to delete before attempting the deletion. Alternatively, a fixture should be used to set up the database state. Here is a fix that makes the test independent:\n\n```python\ndef test_delete_existing_order():\n    db = InMemoryOrderDB()\n    # Ensure the order exists before deleting\n    db.create_order(\"ORD-777\", 250.0)\n    deleted = db.delete_order(\"ORD-777\")\n    assert deleted[\"id\"] == \"ORD-777\"\n```"
+        "proposed_fix": "Make the test independent by creating the required order within the test itself before attempting to delete it. Alternatively, use a fixture to set up the database state. Here is a fix that makes the test self-contained:\n\n```python\ndef test_delete_existing_order():\n    db = InMemoryOrderDB()\n    # Ensure the order exists before deleting\n    db.create_order(\"ORD-777\", 250.0)\n    deleted = db.delete_order(\"ORD-777\")\n    assert deleted[\"id\"] == \"ORD-777\"\n```\n\nAdditionally, it is recommended to add a fixture to clear the database state before each test to prevent cross-test contamination:\n\n```python\nimport pytest\nfrom database import InMemoryOrderDB\n\n@pytest.fixture(autouse=True)\ndef clean_db():\n    db = InMemoryOrderDB()\n    db.clear()\n    yield\n    db.clear()\n```"
       }
     },
     {
@@ -117,15 +117,15 @@
       "baseline": {
         "predicted_category": "flaky_external_dependency",
         "is_correct": true,
-        "duration_sec": 1.841,
+        "duration_sec": 1.704,
         "confidence": 0.95,
-        "proposed_fix": "Mock the external network call to ensure the test is deterministic and does not depend on external services. For example, use `unittest.mock.patch` to mock the socket or HTTP client used by `CurrencyExchangeClient` to return a predefined exchange rate. Alternatively, inject a mock client or dependency into the `CurrencyExchangeClient` constructor to bypass the live network call during testing."
+        "proposed_fix": "Mock the external network call to ensure the test is deterministic and does not depend on live external services. For example, use `unittest.mock.patch` to mock the socket connection or the HTTP client used by `CurrencyExchangeClient` to return a predefined successful response. Alternatively, inject a mock client or dependency into the `CurrencyExchangeClient` constructor to bypass the live fallback entirely during testing."
       },
       "agent": {
         "predicted_category": "flaky_external_dependency",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 10.756,
+        "duration_sec": 13.571,
         "confidence": 0.98,
         "evidence_citation": {
           "file_path": "seeded_repo/src/currency.py",
@@ -143,7 +143,7 @@
       "baseline": {
         "predicted_category": "resource_exhaustion",
         "is_correct": true,
-        "duration_sec": 6.565,
+        "duration_sec": 1.559,
         "confidence": 0.95,
         "proposed_fix": "Ensure that each allocated chunk's file handle is explicitly closed before cleanup. Modify the `LogChunkManager` class to track open file handles and provide a method to close them, or update the test to close handles after allocation. For example:\n\n```python\nfor i in range(15):\n    filepath = manager.allocate_chunk(f\"Log payload entry #{i}\".encode(\"utf-8\"))\n    created_files.append(filepath)\n    assert os.path.exists(filepath)\n    # Explicitly close the file handle if the manager exposes it\n    if hasattr(manager, 'close_chunk'):\n        manager.close_chunk(filepath)\n\nmanager.cleanup()\n```\n\nAlternatively, update `LogChunkManager.cleanup()` to ensure all open file descriptors are closed before attempting to delete files. This can be done by maintaining a list of open file objects and calling `.close()` on each before unlinking."
       },
@@ -151,14 +151,14 @@
         "predicted_category": "resource_exhaustion",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 11.492,
-        "confidence": 1.0,
+        "duration_sec": 9.307,
+        "confidence": 0.98,
         "evidence_citation": {
           "file_path": "seeded_repo/src/file_manager.py",
           "line_number": 16,
           "code_snippet": "self._open_handles.append(f)"
         },
-        "proposed_fix": "Modify `LogChunkManager` to close file handles immediately after writing or ensure they are closed before deletion in `cleanup`. \n\n1. In `allocate_chunk`, close the file after writing:\n```python\ndef allocate_chunk(self, content: bytes) -> str:\n    f = tempfile.NamedTemporaryFile(delete=False)\n    f.write(content)\n    f.close() # Close immediately to release lock\n    self._open_handles.append(f.name) # Store name, not handle\n    return f.name\n```\n\n2. Update `cleanup` to handle names:\n```python\ndef cleanup(self):\n    for name in list(self._open_handles):\n        try:\n            os.unlink(name)\n            self._open_handles.remove(name)\n        except OSError:\n            pass\n```"
+        "proposed_fix": "The `allocate_chunk` method should close the file handle after writing the content, or the `cleanup` method should close the handles before attempting to unlink the files. The most robust fix is to close the handle immediately after writing in `allocate_chunk` if the file is not needed for further writing, or to ensure `cleanup` closes handles first. Here is a fix for `cleanup` to close handles before unlinking:\n\n```python\ndef cleanup(self):\n    for h in list(self._open_handles):\n        try:\n            h.close()\n            os.unlink(h.name)\n            self._open_handles.remove(h)\n        except Exception:\n            pass\n```\n\nAlternatively, fix `allocate_chunk` to close the file after writing:\n\n```python\ndef allocate_chunk(self, content: bytes) -> str:\n    f = tempfile.NamedTemporaryFile(delete=False)\n    f.write(content)\n    f.close()\n    return f.name\n```"
       }
     },
     {
@@ -169,7 +169,7 @@
       "baseline": {
         "predicted_category": "datetime_clock_drift",
         "is_correct": true,
-        "duration_sec": 6.515,
+        "duration_sec": 1.43,
         "confidence": 0.98,
         "proposed_fix": "Modify the `SubscriptionService.is_subscription_active` method to ensure both datetimes are timezone-aware before comparison. For example, if the input `expires_at` is naive, assume it is UTC and attach `timezone.utc`. If the internal `datetime.now()` is naive, replace it with `datetime.now(timezone.utc)`. Alternatively, the test could pass a naive datetime if the service expects naive inputs, but the robust fix is to make the service handle timezone-aware datetimes correctly.\n\nExample fix in `SubscriptionService`:\n```python\nfrom datetime import datetime, timezone\n\ndef is_subscription_active(self, expires_at):\n    now = datetime.now(timezone.utc)\n    if expires_at.tzinfo is None:\n        expires_at = expires_at.replace(tzinfo=timezone.utc)\n    return expires_at > now\n```"
       },
@@ -177,7 +177,7 @@
         "predicted_category": "datetime_clock_drift",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 9.214,
+        "duration_sec": 9.057,
         "confidence": 1.0,
         "evidence_citation": {
           "file_path": "seeded_repo/src/billing.py",
@@ -195,7 +195,7 @@
       "baseline": {
         "predicted_category": "unseeded_randomness",
         "is_correct": true,
-        "duration_sec": 5.371,
+        "duration_sec": 4.428,
         "confidence": 0.95,
         "proposed_fix": "To fix this, the test should either: (1) Seed the random number generator used by `ApiTokenService` to ensure deterministic token generation, or (2) Modify the test to only validate tokens that are expected to pass the format rules, or (3) Update `validate_token_format()` to accept tokens starting with '_' or '-' if that is the intended behavior, or (4) Use a mock or fixture to control the token generation process. The most robust fix is to seed the RNG in the test setup to make the test deterministic."
       },
@@ -203,14 +203,14 @@
         "predicted_category": "unseeded_randomness",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 10.603,
+        "duration_sec": 9.918,
         "confidence": 0.98,
         "evidence_citation": {
           "file_path": "seeded_repo/src/security.py",
           "line_number": 14,
           "code_snippet": "return \"\".join(random.choice(self.ALPHABET) for _ in range(length))"
         },
-        "proposed_fix": "Modify `generate_token` to ensure the first character is always alphanumeric, or remove invalid characters from the `ALPHABET` if they are not required for the token format. A robust fix is to force the first character to be from `string.ascii_letters + string.digits`:\n\n```python\ndef generate_token(self, length: int = 16) -> str:\n    if length < 1:\n        return \"\"\n    # Ensure first char is alphanumeric\n    first_char = random.choice(string.ascii_letters + string.digits)\n    rest = \"\".join(random.choice(self.ALPHABET) for _ in range(length - 1))\n    return first_char + rest\n```"
+        "proposed_fix": "Fix the `generate_token` method in `seeded_repo/src/security.py` to ensure the first character is always alphanumeric. For example:\n\n```python\ndef generate_token(self, length: int = 16) -> str:\n    if length < 1:\n        return \"\"\n    # Ensure first char is alphanumeric\n    first_char = random.choice(string.ascii_letters + string.digits)\n    rest = \"\".join(random.choice(self.ALPHABET) for _ in range(length - 1))\n    return first_char + rest\n```\n\nAlternatively, the test could be made deterministic by seeding the random generator, but fixing the generator to comply with its own validation rules is the more robust solution."
       }
     },
     {
@@ -221,7 +221,7 @@
       "baseline": {
         "predicted_category": "environment_mutation",
         "is_correct": true,
-        "duration_sec": 6.525,
+        "duration_sec": 5.598,
         "confidence": 0.98,
         "proposed_fix": "Use a pytest fixture to save and restore the `APP_ENV` environment variable, or use `monkeypatch` to set the environment variable in a way that is automatically reverted after the test. For example:\n\n```python\nimport os\nimport pytest\nfrom config_service import AppConfigService\n\n@pytest.fixture\ndef restore_env():\n    original_env = os.environ.get(\"APP_ENV\")\n    yield\n    if original_env is None:\n        os.environ.pop(\"APP_ENV\", None)\n    else:\n        os.environ[\"APP_ENV\"] = original_env\n\ndef test_override_env_production(restore_env):\n    os.environ[\"APP_ENV\"] = \"production\"\n    assert AppConfigService.is_production() is True\n    assert AppConfigService.get_max_connections() == 100\n\ndef test_default_env_development(restore_env):\n    assert AppConfigService.get_environment() == \"development\"\n    assert AppConfigService.get_max_connections() == 10\n```"
       },
@@ -229,14 +229,14 @@
         "predicted_category": "environment_mutation",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 10.334,
+        "duration_sec": 11.131,
         "confidence": 0.98,
         "evidence_citation": {
           "file_path": "seeded_repo/tests/test_case_09_env_mutation.py",
           "line_number": 10,
           "code_snippet": "os.environ[\"APP_ENV\"] = \"production\""
         },
-        "proposed_fix": "Use a pytest fixture to save and restore the environment variable, or use `monkeypatch` to safely set and unset the variable. \n\nExample Fix using monkeypatch:\n```python\nimport pytest\nfrom config_service import AppConfigService\n\ndef test_override_env_production(monkeypatch):\n    monkeypatch.setenv(\"APP_ENV\", \"production\")\n    assert AppConfigService.is_production() is True\n    assert AppConfigService.get_max_connections() == 100\n\ndef test_default_env_development(monkeypatch):\n    # Ensure APP_ENV is not set or is set to development\n    monkeypatch.delenv(\"APP_ENV\", raising=False)\n    assert AppConfigService.get_environment() == \"development\"\n    assert AppConfigService.get_max_connections() == 10\n```"
+        "proposed_fix": "Use a pytest fixture to save and restore the environment variable, or use `monkeypatch` to safely modify and revert environment variables. \n\nExample Fix using monkeypatch:\n```python\nimport pytest\nfrom config_service import AppConfigService\n\ndef test_override_env_production(monkeypatch):\n    monkeypatch.setenv(\"APP_ENV\", \"production\")\n    assert AppConfigService.is_production() is True\n    assert AppConfigService.get_max_connections() == 100\n\ndef test_default_env_development(monkeypatch):\n    # Ensure APP_ENV is not set or is set to development for this test\n    monkeypatch.delenv(\"APP_ENV\", raising=False)\n    assert AppConfigService.get_environment() == \"development\"\n    assert AppConfigService.get_max_connections() == 10\n```"
       }
     },
     {
@@ -247,7 +247,7 @@
       "baseline": {
         "predicted_category": "hard_ambiguous_case",
         "is_correct": true,
-        "duration_sec": 7.611,
+        "duration_sec": 6.695,
         "confidence": 0.92,
         "proposed_fix": "Modify the MicroRpcServer class to set SO_REUSEADDR on the server socket before binding. In the server's socket initialization, add:\n\n    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\n\nbefore calling self.socket.bind((host, port)). Additionally, increase the client timeout from 0.5s to 2.0s and the sleep from 0.01s to 0.1s to provide more robustness, but the primary fix is the SO_REUSEADDR option. Example:\n\n    import socket\n    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n    self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\n    self.socket.bind((host, port))\n    self.socket.listen(5)"
       },
@@ -255,7 +255,7 @@
         "predicted_category": "hard_ambiguous_case",
         "is_correct": true,
         "verification_status": "VERIFIED",
-        "duration_sec": 13.229,
+        "duration_sec": 12.959,
         "confidence": 0.95,
         "evidence_citation": {
           "file_path": "seeded_repo/src/micro_server.py",

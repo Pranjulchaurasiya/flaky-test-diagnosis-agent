@@ -21,7 +21,7 @@
     "failures": 3,
     "flake_rate": 1.0
   },
-  "diagnosis_duration_sec": 13.229,
+  "diagnosis_duration_sec": 12.959,
   "trajectory": [
     {
       "step": 1,

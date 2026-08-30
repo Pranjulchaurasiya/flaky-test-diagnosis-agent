@@ -1,7 +1,7 @@
 {
   "test_target": "seeded_repo/tests/test_case_07_datetime_drift.py::test_future_subscription_validity",
   "taxonomy_category": "datetime_clock_drift",
-  "root_cause_analysis": "The test `test_future_subscription_validity` passes a timezone-aware UTC datetime (`datetime.now(timezone.utc) + timedelta(days=30)`) to `SubscriptionService.is_subscription_active`. Inside the service method, the current time is retrieved using `datetime.now()` without a timezone argument, resulting in a naive local datetime. Python's `datetime` objects cannot be directly compared if one is timezone-aware and the other is naive, leading to a `TypeError: can't compare offset-naive and offset-aware datetimes`. This is a deterministic failure (100% flake rate) caused by the mismatch in timezone awareness between the input and the internal clock reference.",
+  "root_cause_analysis": "The test `test_future_subscription_validity` passes a timezone-aware UTC datetime (`datetime.now(timezone.utc) + timedelta(days=30)`) to `SubscriptionService.is_subscription_active`. Inside the service method, the current time is retrieved using `datetime.now()` without a timezone argument, resulting in a naive local datetime. Python 3 raises a `TypeError` when attempting to compare a timezone-aware datetime with a naive datetime. This is a deterministic failure (100% flake rate) caused by the mismatch in timezone awareness between the input parameter and the internal clock reference.",
   "evidence_citation": {
     "file_path": "seeded_repo/src/billing.py",
     "line_number": 11,
@@ -21,7 +21,7 @@
     "failures": 3,
     "flake_rate": 1.0
   },
-  "diagnosis_duration_sec": 9.214,
+  "diagnosis_duration_sec": 9.057,
   "trajectory": [
     {
       "step": 1,

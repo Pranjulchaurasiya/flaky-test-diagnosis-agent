@@ -1,13 +1,13 @@
 {
   "test_target": "seeded_repo/tests/test_case_08_unseeded_random.py::test_api_token_validity_batches",
   "taxonomy_category": "unseeded_randomness",
-  "root_cause_analysis": "The test `test_api_token_validity_batches` fails intermittently because `ApiTokenService.generate_token` uses `random.choice` with an unseeded random number generator. The `ALPHABET` constant includes the characters '_' and '-'. The `validate_token_format` method explicitly rejects any token that starts with '_' or '-'. Since the first character of the generated token is chosen randomly from the full alphabet, there is a non-zero probability (approximately 2/64 \u2248 3.1% per token, leading to ~46% chance of failure over 20 tokens) that the first character will be invalid. This causes the assertion to fail non-deterministically depending on the random seed state at the time of execution.",
+  "root_cause_analysis": "The test `test_api_token_validity_batches` fails intermittently because `ApiTokenService.generate_token` uses `random.choice` with an alphabet that includes characters ('_', '-') which are explicitly rejected by `validate_token_format` if they appear as the first character. Since the random seed is not fixed, there is a non-zero probability (~15%) that a generated token starts with an invalid character, causing the assertion to fail. The flake rate of 0.33 over 3 runs is consistent with this probabilistic failure mode.",
   "evidence_citation": {
     "file_path": "seeded_repo/src/security.py",
     "line_number": 14,
     "code_snippet": "return \"\".join(random.choice(self.ALPHABET) for _ in range(length))"
   },
-  "proposed_fix": "Modify `generate_token` to ensure the first character is always alphanumeric, or remove invalid characters from the `ALPHABET` if they are not required for the token format. A robust fix is to force the first character to be from `string.ascii_letters + string.digits`:\n\n```python\ndef generate_token(self, length: int = 16) -> str:\n    if length < 1:\n        return \"\"\n    # Ensure first char is alphanumeric\n    first_char = random.choice(string.ascii_letters + string.digits)\n    rest = \"\".join(random.choice(self.ALPHABET) for _ in range(length - 1))\n    return first_char + rest\n```",
+  "proposed_fix": "Fix the `generate_token` method in `seeded_repo/src/security.py` to ensure the first character is always alphanumeric. For example:\n\n```python\ndef generate_token(self, length: int = 16) -> str:\n    if length < 1:\n        return \"\"\n    # Ensure first char is alphanumeric\n    first_char = random.choice(string.ascii_letters + string.digits)\n    rest = \"\".join(random.choice(self.ALPHABET) for _ in range(length - 1))\n    return first_char + rest\n```\n\nAlternatively, the test could be made deterministic by seeding the random generator, but fixing the generator to comply with its own validation rules is the more robust solution.",
   "confidence": 0.98,
   "verification_status": "VERIFIED",
   "verifier_details": {
@@ -18,10 +18,10 @@
   },
   "rerun_summary": {
     "runs": 3,
-    "failures": 2,
-    "flake_rate": 0.67
+    "failures": 1,
+    "flake_rate": 0.33
   },
-  "diagnosis_duration_sec": 10.603,
+  "diagnosis_duration_sec": 9.918,
   "trajectory": [
     {
       "step": 1,
@@ -35,12 +35,11 @@
       "target": "seeded_repo/tests/test_case_08_unseeded_random.py::test_api_token_validity_batches",
       "result": {
         "total_runs": 3,
-        "fail_count": 2,
-        "flake_rate": 0.67,
+        "fail_count": 1,
+        "flake_rate": 0.33,
         "is_intermittent_flaky": true,
         "distinct_errors": [
-          "E   AssertionError: Random token failure! Token '_Vyk9jouVE0qjX6d' failed format validation rules. | E   assert False | E    +  where False = validate_token_format('_Vyk9jouVE0qjX6d')",
-          "E   AssertionError: Random token failure! Token '_guEPzEH4Nzc0c7z' failed format validation rules. | E   assert False | E    +  where False = validate_token_format('_guEPzEH4Nzc0c7z')"
+          "E   AssertionError: Random token failure! Token '_MP02_a77_pklCGY' failed format validation rules. | E   assert False | E    +  where False = validate_token_format('_MP02_a77_pklCGY')"
         ]
       }
     },
