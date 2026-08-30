@@ -32,35 +32,7 @@ function initThemeController() {
 }
 
 // ==========================================
-// 2. Section Rail Observer
-// ==========================================
-function initSectionRail() {
-  const railStep = document.getElementById('rail-step');
-  const railLabel = document.getElementById('rail-label');
-  if (!railStep || !railLabel) return;
-
-  const sections = document.querySelectorAll('section[data-sec]');
-  const total = sections.length;
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const secName = entry.target.getAttribute('data-sec') || 'overview';
-        let secIdx = 1;
-        sections.forEach((s, idx) => {
-          if (s === entry.target) secIdx = idx + 1;
-        });
-        railStep.textContent = `[0${secIdx}/0${total}]`;
-        railLabel.textContent = `› ${secName}`;
-      }
-    });
-  }, { threshold: 0.3 });
-
-  sections.forEach(sec => observer.observe(sec));
-}
-
-// ==========================================
-// 3. Three.js 3D Depth Stack
+// 2. Three.js 3D Depth Stack
 // ==========================================
 let scene, camera, renderer, planesGroup, nodesGroup;
 let isRotating = true;
@@ -397,7 +369,6 @@ function useFallbackData() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initThemeController();
-  initSectionRail();
   initThreeVisualizer();
   initStepperControls();
   loadBenchmarkData();

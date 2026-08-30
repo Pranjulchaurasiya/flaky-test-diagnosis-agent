@@ -139,40 +139,6 @@ body {
   100% { stroke-dashoffset: 600; }
 }
 
-/* Section Rail Tracker */
-.secrail {
-  position: fixed;
-  left: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 90;
-  pointer-events: none;
-  background: var(--panel);
-  border: 1px solid var(--edge);
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--r-pill);
-  font-family: var(--mono);
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  box-shadow: var(--e1);
-}
-
-.secrail__no {
-  color: var(--amber);
-  font-weight: 700;
-}
-
-.secrail__name {
-  color: var(--ink-2);
-  text-transform: lowercase;
-}
-
-@media (max-width: 1200px) {
-  .secrail { display: none; }
-}
-
 /* Header Rail */
 .rail {
   position: sticky;
