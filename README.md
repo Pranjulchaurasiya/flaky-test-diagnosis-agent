@@ -12,15 +12,16 @@
   <img alt="LLM Engine: Groq" src="https://img.shields.io/badge/engine-Groq%20(Qwen%203.8%2027B)-F55036">
   <a href="https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/"><img alt="Live Forensic Lab" src="https://img.shields.io/badge/demo-live%20forensic%20lab-2fe08a"></a>
   <img alt="Benchmark: 10/10 Verified" src="https://img.shields.io/badge/benchmark-10%2F10%20(100%25)-brightgreen">
+  <a href="https://youtu.be/45XQ4-phdCE"><img alt="Demo Video" src="https://img.shields.io/badge/YouTube-Demo%20Video%20(2.5m)-FF0000?logo=youtube&logoColor=white"></a>
   <a href="TECHNICAL_REPORT.md"><img alt="Technical Report" src="https://img.shields.io/badge/technical-report-8A2BE2"></a>
 </p>
 
 <p align="center">
-  <a href="https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/"><b>Enter the Forensic Lab (Live Demo) →</b></a>
+  <a href="https://youtu.be/45XQ4-phdCE"><b>🎬 Watch Product Demo Video (2.5 min) →</b></a>
   &nbsp;·&nbsp;
-  <a href="TECHNICAL_REPORT.md">Technical Report (EFP Architecture)</a>
+  <a href="https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/"><b>Enter Forensic Lab (Web Demo) →</b></a>
   &nbsp;·&nbsp;
-  <a href="#-quick-integrations">Quick Integrations</a>
+  <a href="TECHNICAL_REPORT.md">Technical Report</a>
   &nbsp;·&nbsp;
   <a href="#-benchmark-results">Benchmark Results</a>
   &nbsp;·&nbsp;
@@ -30,6 +31,12 @@
 </p>
 
 ---
+
+## 🎬 Product Demo Video
+
+[![FlakyGuard Demo Video](https://img.youtube.com/vi/45XQ4-phdCE/maxresdefault.jpg)](https://youtu.be/45XQ4-phdCE)
+
+> 📹 **Watch on YouTube:** [https://youtu.be/45XQ4-phdCE](https://youtu.be/45XQ4-phdCE) *(2 min 31 sec — HD Walkthrough with Live Rerun Telemetry & AST Verification)*
 
 ## 💥 Same Failure Trace, Two Fates
 
