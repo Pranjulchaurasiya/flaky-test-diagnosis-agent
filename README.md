@@ -195,6 +195,15 @@ FlakyGuard classifies root causes into 10 standardized categories derived from t
 
 ---
 
+## 🔒 Security & Sandbox Notice
+
+> [!NOTE]
+> **Synthetic Test Fixtures:** The test files within `seeded_repo/` are synthetic specimens purposefully designed to simulate common non-deterministic bug patterns (race conditions, timing drift, socket collisions, and memory leaks) exclusively for benchmark validation.
+> 
+> **Execution Isolation:** FlakyGuard's dynamic diagnostic engine executes targeted test suites to measure empirical flake rates. When diagnosing untrusted, third-party codebases, we strongly recommend running FlakyGuard inside an isolated container environment (e.g. via our provided `docker-compose.yml` or containerized CI runners) to prevent arbitrary code side effects.
+
+---
+
 ## 📄 License
 
 MIT License. Built for the **micro1 Frontier Engineering Challenge 2026**.
