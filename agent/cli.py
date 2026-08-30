@@ -61,15 +61,15 @@ def main():
             cite = diagnosis.get("evidence_citation", {})
             cite_str = f"`{cite.get('file_path')}:{cite.get('line_number')}`" if cite.get("file_path") else "N/A"
             ver_status = diagnosis.get("verification_status", "UNKNOWN")
-            ver_badge = "✅ **VERIFIED (100% Grounded)**" if ver_status == "VERIFIED" else "❌ **UNVERIFIED**"
+            ver_badge = "✅ **VERIFIED (Grounded in Code AST)**" if ver_status == "VERIFIED" else "❌ **UNVERIFIED**"
 
             md_out = f"""# 🔬 FlakyGuard Diagnostic Report
 
 ### Test Target: `{diagnosis.get('test_target')}`
 - **Root Cause Category:** `{diagnosis.get('taxonomy_category')}`
-- **Verification Status:** {ver_badge}
+- **AST Verification:** {ver_badge}
 - **Evidence Citation:** {cite_str}
-- **Confidence:** `{diagnosis.get('confidence', 1.0) * 100:.0f}%`
+- **LLM Self-Reported Confidence:** `{diagnosis.get('confidence', 1.0) * 100:.0f}%`
 
 ---
 
