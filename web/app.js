@@ -187,13 +187,13 @@ function renderBenchmarkTable(results) {
     const citeText = evidence?.file_path ? `${evidence.file_path}:${evidence.line_number}` : 'N/A';
 
     tr.innerHTML = `
-      <td><strong>${c.id}</strong></td>
-      <td><code>${c.name}</code></td>
-      <td><span class="badge-pill">${c.ground_truth_category}</span></td>
-      <td><span class="badge-pill ${isBaselineCorrect ? 'pass' : 'fail'}">${isBaselineCorrect ? '✅ ' + c.baseline.predicted_category : '❌ ' + (c.baseline?.predicted_category || 'Fail')}</span></td>
-      <td><span class="badge-pill ${isAgentCorrect ? 'pass' : 'fail'}">${isAgentCorrect ? '✅ ' + c.agent.predicted_category : '❌ Fail'}</span></td>
-      <td><code>${citeText}</code></td>
-      <td><span class="badge-pill ${verified ? 'verified' : 'fail'}">${verified ? 'VERIFIED' : 'UNVERIFIED'}</span></td>
+      <td class="col-id"><strong>${c.id}</strong></td>
+      <td class="col-name"><div class="target-name">${c.name}</div></td>
+      <td class="col-cat"><span class="badge-pill">${c.ground_truth_category}</span></td>
+      <td class="col-baseline"><span class="badge-pill ${isBaselineCorrect ? 'pass' : 'fail'}">${isBaselineCorrect ? '✅ ' + c.baseline.predicted_category : '❌ ' + (c.baseline?.predicted_category || 'Fail')}</span></td>
+      <td class="col-agent"><span class="badge-pill ${isAgentCorrect ? 'pass' : 'fail'}">${isAgentCorrect ? '✅ ' + c.agent.predicted_category : '❌ Fail'}</span></td>
+      <td class="col-citation"><code>${citeText}</code></td>
+      <td class="col-verification"><span class="badge-pill ${verified ? 'verified' : 'fail'}">${verified ? 'VERIFIED' : 'UNVERIFIED'}</span></td>
     `;
     tbody.appendChild(tr);
   });
