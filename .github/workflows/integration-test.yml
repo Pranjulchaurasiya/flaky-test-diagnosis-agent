@@ -1,0 +1,80 @@
+name: FlakyGuard Integration Test (Self-Diagnosis)
+
+# Triggers on every push to main and on PRs — proves production-readiness
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  integration-test:
+    name: Self-Diagnose Known Flaky Fixture
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install FlakyGuard dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify seeded flaky tests are observable
+        run: |
+          echo "Running seeded test suite to confirm flakiness is present..."
+          python -m pytest seeded_repo/tests/ -v --tb=short || true
+
+      - name: Run FlakyGuard on Case 01 (Race Condition — known ground truth)
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python -c "
+          import json, sys
+          from agent.diagnosis_agent import FlakyTestDiagnosisAgent
+
+          agent = FlakyTestDiagnosisAgent(workspace_root='.')
+          result = agent.diagnose(
+              test_file='seeded_repo/tests/test_case_01_race_condition.py',
+              test_function='test_concurrent_metric_increments',
+              initial_traceback='AssertionError: Race condition detected! Expected 100, got less.',
+              n_reruns=3
+          )
+
+          print(json.dumps(result, indent=2, default=str))
+
+          # Assert minimum correctness criteria
+          assert result['taxonomy_category'] == 'race_condition', f'Wrong category: {result[\"taxonomy_category\"]}'
+          assert result['verification_status'] == 'VERIFIED', f'Verification failed: {result[\"verification_status\"]}'
+          assert result['evidence_citation'].get('file_path'), 'No evidence citation'
+          assert result['evidence_citation'].get('line_number'), 'No line number'
+
+          print()
+          print('=== INTEGRATION TEST PASSED ===')
+          print(f'Category    : {result[\"taxonomy_category\"]}')
+          print(f'Verification: {result[\"verification_status\"]}')
+          print(f'Citation    : {result[\"evidence_citation\"][\"file_path\"]}:{result[\"evidence_citation\"][\"line_number\"]}')
+          print(f'Confidence  : {result[\"confidence\"]}')
+          print(f'Duration    : {result[\"diagnosis_duration_sec\"]}s')
+          "
+
+      - name: Publish integration test summary
+        if: always()
+        run: |
+          echo "## 🔬 FlakyGuard Integration Test" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Self-diagnosed \`case_01\` (race condition) against live codebase." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Expected | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| taxonomy_category | race_condition | See logs |" >> $GITHUB_STEP_SUMMARY
+          echo "| verification_status | VERIFIED | See logs |" >> $GITHUB_STEP_SUMMARY
+          echo "| evidence_citation | file_path + line_number | See logs |" >> $GITHUB_STEP_SUMMARY
