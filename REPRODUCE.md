@@ -4,6 +4,34 @@ Follow these exact steps to reproduce the 10/10 benchmark results from a clean e
 
 ---
 
+## ⚡ Fastest Path — One Command
+
+### Docker (zero local setup required)
+```bash
+git clone https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent.git
+cd flaky-test-diagnosis-agent
+GROQ_API_KEY=gsk_... docker compose --profile eval up --build
+```
+- **Web lab** starts at `http://localhost:8080` automatically
+- **Benchmark eval** runs and outputs `eval/output/results.json`
+
+### Without Docker — Linux / macOS
+```bash
+git clone https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent.git
+cd flaky-test-diagnosis-agent
+GROQ_API_KEY=gsk_... ./bootstrap.sh eval
+```
+
+### Without Docker — Windows PowerShell
+```powershell
+git clone https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent.git
+cd "flaky-test-diagnosis-agent"
+$env:GROQ_API_KEY = "gsk_..."
+.\bootstrap.ps1 eval
+```
+
+---
+
 ## 1. Prerequisites & Environment Setup
 
 - **Python**: 3.10+ (Tested on Python 3.13.9)

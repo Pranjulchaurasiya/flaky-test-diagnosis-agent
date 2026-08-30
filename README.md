@@ -67,6 +67,7 @@ Choose the method that fits your workflow — **no cloning required**:
 
 | Channel | Best For | Usage |
 |---|---|---|
+| 🐳 **Docker** | Zero-config, any machine | `GROQ_API_KEY=gsk_... docker compose --profile eval up --build` |
 | 🌐 **Live Web Lab** | Instant evaluation | [**pranjulchaurasiya.github.io/flaky-test-diagnosis-agent**](https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/) |
 | ⚡ **GitHub Actions** | Automated PR triage | Add `uses: Pranjulchaurasiya/flaky-test-diagnosis-agent@main` to CI |
 | 📦 **Python CLI** | Local terminal / Docker | `pip install git+https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent.git` |

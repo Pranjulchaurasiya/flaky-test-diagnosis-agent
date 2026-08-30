@@ -1,0 +1,53 @@
+# Docker build context exclusions for FlakyGuard
+# Mirrors .gitignore but also excludes demo/media artifacts
+
+# Git internals
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Test + lint caches
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ruff_cache/
+.deepeval/
+.hypothesis/
+
+# Local tooling
+.gstack/
+.agents/
+.idea/
+.vscode/
+
+# Demo and media assets (never in Docker image)
+demo/
+*.mp4
+*.wav
+*.avi
+*.png
+scripts/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker runtime state
+.docker-data/

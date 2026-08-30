@@ -60,3 +60,9 @@ demo/
 *.mp4
 *.wav
 *.avi
+
+# Demo / Video Production Scripts (local only, not for submission)
+scripts/
+
+# Docker runtime state
+.docker-data/

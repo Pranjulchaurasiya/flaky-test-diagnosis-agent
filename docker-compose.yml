@@ -1,0 +1,70 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  FlakyGuard — Full Stack Docker Compose
+#  One-command bootstrap: `docker compose up --build`
+#
+#  Services:
+#    agent   → run full benchmark eval (mode=full/baseline/agent via EVAL_MODE)
+#    web     → serve the interactive forensic lab at http://localhost:8080
+#    mcp     → MCP server (stdio mode, exposed for IDE integrations)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Interactive Forensic Web Lab ─────────────────────────────────────────
+  web:
+    image: python:3.11-slim
+    container_name: flakyguard-web
+    working_dir: /app
+    volumes:
+      - .:/app:ro
+    ports:
+      - "8080:8080"
+    command: python -m http.server 8080 --directory /app/web
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ── Benchmark Evaluation Engine ──────────────────────────────────────────
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flakyguard-agent
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - EVAL_MODE=${EVAL_MODE:-full}
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+      - flakyguard-results:/app/eval/output
+    command: >
+      sh -c "python eval/run_eval.py --mode ${EVAL_MODE:-full} --output eval/output/results.json
+             && echo '=== Eval complete. Results at eval/output/results.json ==='"
+    depends_on:
+      web:
+        condition: service_healthy
+    profiles:
+      - eval
+
+  # ── MCP Server (for Cursor / Claude Code integration) ────────────────────
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flakyguard-mcp
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app:ro
+    command: python mcp/server.py
+    stdin_open: true
+    tty: true
+    profiles:
+      - mcp
+
+volumes:
+  flakyguard-results:
