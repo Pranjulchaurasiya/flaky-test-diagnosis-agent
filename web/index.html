@@ -31,7 +31,7 @@
         <a href="#benchmark" class="nav-link">Benchmark (10/10)</a>
         <a href="#trajectories" class="nav-link">Trajectory Explorer</a>
         <a href="#taxonomy" class="nav-link">Taxonomy</a>
-        <a href="https://github.com" target="_blank" class="nav-btn">View Docs</a>
+        <a href="https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent#readme" target="_blank" class="nav-btn">View Docs</a>
       </nav>
     </div>
   </header>
@@ -60,8 +60,8 @@
             <div class="stat-label">Evidence Verification</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value">+20%</div>
-            <div class="stat-label">Improvement vs Baseline</div>
+            <div class="stat-value">+100%</div>
+            <div class="stat-label">Verification vs Baseline</div>
           </div>
         </div>
 
@@ -111,15 +111,15 @@
       <div class="bm-card baseline">
         <div class="bm-header">
           <span class="bm-type">Single-Shot Baseline</span>
-          <span class="bm-score">8 / 10 (80%)</span>
+          <span class="bm-score">10 / 10 (100%)</span>
         </div>
-        <p class="bm-desc">Zero-shot prompt with only failing test code & traceback. Zero tools, zero code verification.</p>
+        <p class="bm-desc">Single-shot LLM prompt with failing test code & traceback. Zero tools, zero grounded code verification.</p>
         <div class="bm-bar-track">
-          <div class="bm-bar-fill baseline-fill" style="width: 80%;"></div>
+          <div class="bm-bar-fill baseline-fill" style="width: 100%;"></div>
         </div>
         <div class="bm-meta">
-          <span>Hard Case (Case 10): <strong>Failed (Misdiagnosed)</strong></span>
-          <span>Verification Rate: <strong>0%</strong></span>
+          <span>Classification: <strong>100%</strong></span>
+          <span>Verification Rate: <strong>0% (Unverified)</strong></span>
         </div>
       </div>
 
@@ -133,8 +133,8 @@
           <div class="bm-bar-fill agent-fill" style="width: 100%;"></div>
         </div>
         <div class="bm-meta">
-          <span>Hard Case (Case 10): <strong class="text-success">Passed (Socket TIME_WAIT)</strong></span>
-          <span>Verification Rate: <strong class="text-success">100%</strong></span>
+          <span>Classification: <strong class="text-success">100%</strong></span>
+          <span>Verification Rate: <strong class="text-success">100% (VERIFIED)</strong></span>
         </div>
       </div>
     </div>
