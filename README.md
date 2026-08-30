@@ -81,6 +81,8 @@ You don't need to clone the repository manually. Choose the integration method t
                   │   Live Web   ││GitHub Actions││     CLI      ││  IDE / MCP   │
                   │  Dashboard   ││  CI Action   ││  Tool (pip)  ││    Server    │
                   └──────────────┘└──────────────┘└──────────────┘└──────────────┘
+```
+
 ### Option 1: 🌐 Interactive Forensic Lab & Benchmark Explorer (Live Web Demo)
 Visit the live hosted dashboard to explore, audit, and evaluate real diagnostic trajectories with zero installation:
 👉 **[https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/](https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/)**
