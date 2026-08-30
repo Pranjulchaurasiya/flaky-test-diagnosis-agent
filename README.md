@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/Pranjulchaurasiya/flaky-test-diagnosis-agent/main/web/assets/logo.png" alt="FlakyGuard" width="110" onerror="this.style.display='none'">
-</p>
-
 <h1 align="center">FlakyGuard 🔬⚡</h1>
 <h3 align="center">The crash-test lab for CI flaky tests.</h3>
 
