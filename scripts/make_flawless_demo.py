@@ -299,7 +299,7 @@ def record_browser_session(segments_data, total_duration):
         # Step A: Load page & wait for all assets + Three.js to finish painting
         page.goto("http://localhost:8080", wait_until="networkidle")
         page.wait_for_selector(".hero__pitch")
-        page.wait_for_timeout(2500)
+        page.wait_for_timeout(4000)
 
         # Inject Virtual Animated Cursor
         page.evaluate(CURSOR_INJECT_JS)
@@ -465,12 +465,12 @@ def record_browser_session(segments_data, total_duration):
 def render_master_video(raw_webm, master_audio, srt_path):
     print("Muxing video, master voiceover, and burning subtitles with zero white opening...")
 
-    # We trim the first 2.5s of initial browser navigation delay (-ss 00:00:02.5) so video starts immediately on the loaded UI!
+    # We trim the exact 4.5s initial browser launch and render time so video starts immediately on the loaded UI!
     sub_filter = "subtitles=subtitles.srt:force_style='FontName=Arial,FontSize=21,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=4,BackColour=&H80000000,MarginV=40,Alignment=2'"
 
     cmd = [
         "ffmpeg", "-y",
-        "-ss", "00:00:02.5",
+        "-ss", "00:00:04.5",
         "-i", raw_webm,
         "-i", master_audio,
         "-filter_complex", f"[0:v]{sub_filter},format=yuv420p[v]",
