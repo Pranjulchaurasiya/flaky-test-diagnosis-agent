@@ -81,14 +81,13 @@ You don't need to clone the repository manually. Choose the integration method t
                   │   Live Web   ││GitHub Actions││     CLI      ││  IDE / MCP   │
                   │  Dashboard   ││  CI Action   ││  Tool (pip)  ││    Server    │
                   └──────────────┘└──────────────┘└──────────────┘└──────────────┘
-```
-
-### Option 1: 🌐 Zero-Install Interactive Web Lab (Browser)
-Visit the live hosted dashboard with no installation or account required:
+### Option 1: 🌐 Interactive Forensic Lab & Benchmark Explorer (Live Web Demo)
+Visit the live hosted dashboard to explore, audit, and evaluate real diagnostic trajectories with zero installation:
 👉 **[https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/](https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/)**
-- Inspect 3D rerun timelines and instability stacks in real-time.
-- Step through the interactive forensic reasoning trajectories for all 10 benchmark test cases.
-- Toggle between clean paper grey Light mode and deep bay Dark mode.
+- **Benchmark Exploration:** Step through the agent's real 5-step Reason-Act-Verify trajectories across all 10 ground-truth flaky test categories.
+- **Audit Grounded Evidence:** Inspect line-level code citations and verified deterministic patches.
+- **3D Telemetry:** Visualize non-deterministic execution jitter and simulate flaky runs in real-time.
+- *(Note: To run FlakyGuard on your own repository tests, use Options 2, 3, or 4 below).*
 
 ---
 
