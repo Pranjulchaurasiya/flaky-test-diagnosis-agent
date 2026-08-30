@@ -1,18 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flaky Test Diagnosis Agent — Autonomous CI Flake Diagnosis</title>
-  <meta name="description" content="An autonomous diagnostic agent that investigates non-deterministic test failures, pinpoints root causes from a strict taxonomy, and verifies evidence against source code.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>FlakyGuard — Crash-Test Lab & Diagnostic Agent for CI Flaky Tests</title>
+  <meta name="description" content="Autonomous, tool-augmented forensic agent that investigates CI flaky test failures, classifies root causes against a strict taxonomy, and self-verifies evidence against source code.">
+  <meta name="color-scheme" content="dark light">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <!-- Three.js CDN for 3D Hero -->
+  
+  <!-- Theme Init Script to avoid flicker -->
+  <script>
+    (function() {
+      var saved = localStorage.getItem('flakyguard:theme');
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  
+  <!-- Three.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
+
+  <!-- Background Ambient Telemetry Wave -->
+  <div class="ambient-pulse-container" aria-hidden="true">
+    <svg class="ambient-wave" viewBox="0 0 1600 120" preserveAspectRatio="none">
+      <path class="wave-path" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            d="M 0 60 H 260 l 8 -18 l 12 36 l 8 -18 H 520 l 6 -10 l 8 20 l 6 -10 H 780 l 8 -18 l 12 36 l 8 -18 H 1080 l 6 -10 l 8 20 l 6 -10 H 1340 l 8 -18 l 12 36 l 8 -18 H 1600"/>
+    </svg>
+  </div>
+
+  <!-- Floating Section Rail Tracker -->
+  <aside class="section-rail" id="section-rail" aria-hidden="true">
+    <div class="rail-indicator">
+      <span class="rail-step" id="rail-step">[01/04]</span>
+      <span class="rail-label" id="rail-label">the specimen</span>
+    </div>
+  </aside>
+
   <!-- Navigation Header -->
   <header class="site-header">
     <div class="header-container">
@@ -23,274 +55,297 @@
         </div>
         <div class="logo-text">
           <span class="brand-name">FlakyGuard</span>
-          <span class="brand-tag">Agentic CI Diagnostics</span>
+          <span class="brand-tag">Autonomous CI Diagnostics</span>
         </div>
       </div>
+
       <nav class="nav-links">
-        <a href="#hero" class="nav-link">Overview</a>
+        <a href="#hero" class="nav-link">The Specimen</a>
         <a href="#benchmark" class="nav-link">Benchmark (10/10)</a>
-        <a href="#trajectories" class="nav-link">Trajectory Explorer</a>
-        <a href="#taxonomy" class="nav-link">Taxonomy</a>
-        <a href="https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent#readme" target="_blank" class="nav-btn">View Docs</a>
+        <a href="#trajectories" class="nav-link">Forensic Lab</a>
+        <a href="#taxonomy" class="nav-link">Taxonomy Matrix</a>
+        
+        <!-- Light / Dark Theme Switcher Button -->
+        <button type="button" class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle light/dark theme">
+          <span class="theme-icon moon-icon">🌙</span>
+          <span class="theme-icon sun-icon">☀️</span>
+          <span class="theme-text" id="theme-text">Theme</span>
+        </button>
+
+        <a href="https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent#readme" target="_blank" class="nav-btn">View Docs ↗</a>
       </nav>
     </div>
   </header>
 
-  <!-- Hero Section with 3D Nondeterminism Canvas -->
-  <section id="hero" class="hero-section">
-    <div class="hero-grid">
-      <div class="hero-content">
-        <div class="hero-chip">
-          <span class="chip-status"></span>
-          <span>Autonomous CI Diagnostic Agent • micro1 Hackathon</span>
+  <main>
+    <!-- Hero Section: The Specimen -->
+    <section id="hero" class="hero-section" data-section-name="the specimen">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="specimen-plate">
+            <span class="plate-tag">SPECIMEN</span>
+            <span class="plate-val">CI Runtime Flakes</span>
+            <span class="plate-divider">/</span>
+            <span class="plate-tag">METHOD</span>
+            <span class="plate-val">ReAct Tool Loop & Verification Gate</span>
+          </div>
+
+          <h1 class="hero-title">The crash-test lab for <span class="highlight-text">CI flaky tests</span>.</h1>
+          
+          <p class="hero-subtitle">
+            When a backend test passes locally but fails intermittently in CI, engineers lose 30–60 minutes guessing at timing. 
+            <strong>FlakyGuard</strong> uses empirical test reruns, AST inspection, git archaeology, and an uncompromising code verification gate to uncover the true root cause and generate verified patches.
+          </p>
+
+          <div class="hero-stats">
+            <div class="stat-card">
+              <div class="stat-value" id="stat-accuracy">10 / 10</div>
+              <div class="stat-label">Agent Accuracy (100%)</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value text-accent" id="stat-verification">100%</div>
+              <div class="stat-label">Evidence Verification</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value text-success">+100%</div>
+              <div class="stat-label">Verification vs Baseline</div>
+            </div>
+          </div>
+
+          <div class="hero-actions">
+            <a href="#trajectories" class="btn btn-primary" id="btn-explore-traj">Open Forensic Lab →</a>
+            <a href="#benchmark" class="btn btn-secondary">Inspect Benchmark Table ↓</a>
+          </div>
+
+          <p class="hero-subtext">Verified on live Groq reasoning model • Zero hallucinations allowed.</p>
         </div>
-        <h1 class="hero-title">Stop guessing why CI flaky tests fail.</h1>
-        <p class="hero-subtitle">
-          When a test passes locally but fails intermittently in CI, engineers lose hours guessing at timing. 
-          <strong>FlakyGuard</strong> uses a tool-augmented ReAct loop and self-verification gate to uncover the true root cause and propose verified code fixes.
-        </p>
-        
-        <div class="hero-stats">
-          <div class="stat-card">
-            <div class="stat-value" id="stat-accuracy">100%</div>
-            <div class="stat-label">Agent Accuracy (10/10)</div>
+
+        <!-- 3D Interactive Telemetry Canvas -->
+        <div class="hero-3d-wrapper">
+          <div class="canvas-header">
+            <div class="canvas-title">
+              <span class="live-dot"></span>
+              <span>3D RERUN TIMELINE & INSTABILITY STACK</span>
+            </div>
+            <div class="canvas-controls">
+              <button id="btn-tilt-toggle" class="btn-canvas-ctrl" title="Rotate Perspective">🔄 Rotate</button>
+              <button id="btn-glitch-toggle" class="btn-canvas-ctrl" title="Simulate Non-Deterministic Flake">⚡ Simulate Flake</button>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-verification">100%</div>
-            <div class="stat-label">Evidence Verification</div>
+
+          <div id="three-canvas-container" class="canvas-container">
+            <!-- Fallback for reduced motion -->
+            <div class="reduced-motion-fallback" id="motion-fallback">
+              <div class="fallback-card">
+                <div class="fallback-status pass">Run 1: PASS (24ms)</div>
+                <div class="fallback-status fail">Run 2: FAIL [Concurrency Jitter]</div>
+                <div class="fallback-status pass">Run 3: PASS (22ms)</div>
+              </div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value">+100%</div>
-            <div class="stat-label">Verification vs Baseline</div>
+
+          <div class="canvas-footer">
+            <span><strong>Multi-Run Telemetry</strong>: Translucent planes represent consecutive CI executions. Red planes detect non-deterministic runtime divergence.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benchmark Comparison Section -->
+    <section id="benchmark" class="section-container" data-section-name="rigorous benchmark">
+      <div class="section-header">
+        <div class="section-badge">EMPIRICAL BENCHMARK</div>
+        <h2 class="section-title">Rigorous Evaluation Across 10 Ground-Truth Cases</h2>
+        <p class="section-desc">Single-shot LLM prompt baseline vs. autonomous tool-augmented agent evaluated live on Groq (Qwen 3.8 27B).</p>
+      </div>
+
+      <div class="benchmark-summary-cards">
+        <div class="bm-card baseline">
+          <div class="bm-header">
+            <span class="bm-type">Single-Shot Baseline</span>
+            <span class="bm-score">10 / 10</span>
+          </div>
+          <p class="bm-desc">Single prompt with failing traceback. Fast classification, but zero tools and <strong>zero verified source code citations</strong>.</p>
+          <div class="bm-bar-track">
+            <div class="bm-bar-fill baseline-fill" style="width: 100%;"></div>
+          </div>
+          <div class="bm-meta">
+            <span>Classification: <strong>100%</strong></span>
+            <span>Code Evidence Verification: <strong class="text-danger">0% (Unverified)</strong></span>
           </div>
         </div>
 
-        <div class="hero-actions">
-          <a href="#trajectories" class="btn btn-primary" id="btn-explore-traj">Explore Agent Trajectories</a>
-          <a href="#benchmark" class="btn btn-secondary">View Benchmark Results</a>
+        <div class="bm-card agent">
+          <div class="bm-header">
+            <span class="bm-type">FlakyGuard Agent (Ours)</span>
+            <span class="bm-score highlight">10 / 10</span>
+          </div>
+          <p class="bm-desc">5-step Reason-Act-Verify loop. Multi-run empirical execution, AST scanning, and <strong>100% verified ground-truth code evidence</strong>.</p>
+          <div class="bm-bar-track">
+            <div class="bm-bar-fill agent-fill" style="width: 100%;"></div>
+          </div>
+          <div class="bm-meta">
+            <span>Classification: <strong class="text-success">100%</strong></span>
+            <span>Code Evidence Verification: <strong class="text-success">100% (VERIFIED)</strong></span>
+          </div>
         </div>
       </div>
 
-      <!-- 3D Interactive Signature Visualizer -->
-      <div class="hero-3d-wrapper">
-        <div class="canvas-header">
-          <div class="canvas-title">
-            <span class="live-dot"></span>
-            <span>3D RERUN TIMELINE & INSTABILITY MESH</span>
-          </div>
-          <div class="canvas-controls">
-            <button id="btn-tilt-toggle" class="btn-canvas-ctrl" title="Rotate Perspective">🔄 Rotate</button>
-            <button id="btn-glitch-toggle" class="btn-canvas-ctrl" title="Trigger Flake Glitch">⚡ Trigger Flake</button>
+      <div class="benchmark-table-wrapper">
+        <table class="benchmark-table" id="results-table">
+          <thead>
+            <tr>
+              <th>Case ID</th>
+              <th>Flaky Test Target</th>
+              <th>Ground Truth Category</th>
+              <th>Baseline</th>
+              <th>Agent Diagnosis</th>
+              <th>Code Citation</th>
+              <th>Verification</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Populated dynamically via app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Interactive Forensic Trajectory Lab -->
+    <section id="trajectories" class="section-container" data-section-name="forensic lab">
+      <div class="section-header">
+        <div class="section-badge">INTERACTIVE INVESTIGATION</div>
+        <h2 class="section-title">Forensic Trajectory Lab</h2>
+        <p class="section-desc">Inspect the step-by-step reasoning trajectory, empirical tool outputs, and self-verification pass for every benchmark case.</p>
+      </div>
+
+      <div class="trajectory-explorer-grid">
+        <!-- Case Selector Column -->
+        <div class="case-selector-pane">
+          <div class="selector-header">Select Benchmark Specimen</div>
+          <div class="case-list" id="case-list">
+            <!-- Populated dynamically by app.js -->
           </div>
         </div>
-        <div id="three-canvas-container" class="canvas-container">
-          <!-- Fallback for reduced motion -->
-          <div class="reduced-motion-fallback" id="motion-fallback">
-            <div class="fallback-card">
-              <div class="fallback-status fail">Run 1: PASS (24ms)</div>
-              <div class="fallback-status fail">Run 2: FAIL [Race Condition]</div>
-              <div class="fallback-status pass">Run 3: PASS (22ms)</div>
+
+        <!-- Trajectory Stepper & Inspector -->
+        <div class="trajectory-viewer-pane">
+          <div class="viewer-header">
+            <div class="case-headline" id="active-case-title">Loading Specimen...</div>
+            <div class="case-badge" id="active-case-badge">VERIFIED</div>
+          </div>
+
+          <div class="stepper-controls">
+            <button class="btn-step" id="btn-prev-step">◀ Previous Step</button>
+            <span class="step-indicator" id="step-indicator">Step 1 of 5</span>
+            <button class="btn-step" id="btn-next-step">Next Step ▶</button>
+            <button class="btn-step autoplay" id="btn-autoplay">▶ Auto-Play Steps</button>
+          </div>
+
+          <div class="step-detail-card" id="step-card">
+            <div class="step-badge" id="step-action-badge">ACTION: read_test_file</div>
+            <h3 class="step-title" id="step-title">Initial Test Context Analysis</h3>
+            <div class="step-content-box" id="step-content">
+              <!-- Step JSON details -->
+            </div>
+          </div>
+
+          <div class="diagnosis-summary-card" id="diagnosis-card">
+            <div class="diag-header">FINAL SELF-VERIFIED DIAGNOSIS & PATCH</div>
+            <div class="diag-body">
+              <div class="diag-row">
+                <span class="diag-label">Taxonomy Category:</span>
+                <span class="diag-val" id="diag-cat">race_condition</span>
+              </div>
+              <div class="diag-row">
+                <span class="diag-label">Root Cause Finding:</span>
+                <span class="diag-val" id="diag-cause">...</span>
+              </div>
+              <div class="diag-row">
+                <span class="diag-label">Evidence Line Citation:</span>
+                <code class="diag-code" id="diag-evidence">seeded_repo/src/counter.py:14</code>
+              </div>
+              <div class="diag-row">
+                <span class="diag-label">Verified Fix Patch:</span>
+                <code class="diag-code fix" id="diag-fix">...</code>
+              </div>
             </div>
           </div>
         </div>
-        <div class="canvas-footer">
-          <span>Interactive 3D Depth Stack: Translucent planes represent repeated CI runs. Red highlights identify non-deterministic branch divergence.</span>
-        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Benchmark Comparison Section -->
-  <section id="benchmark" class="section-container">
-    <div class="section-header">
-      <h2 class="section-title">Rigorous Benchmark Evaluation</h2>
-      <p class="section-desc">Before vs. After evaluation on 10 ground-truth seeded non-deterministic tests.</p>
-    </div>
-
-    <div class="benchmark-summary-cards">
-      <div class="bm-card baseline">
-        <div class="bm-header">
-          <span class="bm-type">Single-Shot Baseline</span>
-          <span class="bm-score">10 / 10 (100%)</span>
-        </div>
-        <p class="bm-desc">Single-shot LLM prompt with failing test code & traceback. Zero tools, zero grounded code verification.</p>
-        <div class="bm-bar-track">
-          <div class="bm-bar-fill baseline-fill" style="width: 100%;"></div>
-        </div>
-        <div class="bm-meta">
-          <span>Classification: <strong>100%</strong></span>
-          <span>Verification Rate: <strong>0% (Unverified)</strong></span>
-        </div>
+    <!-- Root-Cause Taxonomy Matrix -->
+    <section id="taxonomy" class="section-container" data-section-name="taxonomy matrix">
+      <div class="section-header">
+        <div class="section-badge">FAILURE MODES</div>
+        <h2 class="section-title">Flaky Test Taxonomy Matrix</h2>
+        <p class="section-desc">Comprehensive classification and diagnostic signatures of non-deterministic failure modes.</p>
       </div>
 
-      <div class="bm-card agent">
-        <div class="bm-header">
-          <span class="bm-type">Autonomous Agent (Ours)</span>
-          <span class="bm-score highlight">10 / 10 (100%)</span>
+      <div class="taxonomy-grid">
+        <div class="tax-card">
+          <div class="tax-icon">⚡</div>
+          <div class="tax-name">Race Condition</div>
+          <p class="tax-desc">Unsynchronized concurrent threads or async tasks mutating shared dictionaries without atomic locks.</p>
         </div>
-        <p class="bm-desc">Tool-augmented loop (Rerun, AST Scan, Git Blame) + Code Evidence Self-Verification Gate.</p>
-        <div class="bm-bar-track">
-          <div class="bm-bar-fill agent-fill" style="width: 100%;"></div>
+        <div class="tax-card">
+          <div class="tax-icon">💧</div>
+          <div class="tax-name">Shared State Leak</div>
+          <p class="tax-desc">Class-level singletons or global in-memory stores retaining mutated state between test instances.</p>
         </div>
-        <div class="bm-meta">
-          <span>Classification: <strong class="text-success">100%</strong></span>
-          <span>Verification Rate: <strong class="text-success">100% (VERIFIED)</strong></span>
+        <div class="tax-card">
+          <div class="tax-icon">⏱️</div>
+          <div class="tax-name">Timing / Sleep Drift</div>
+          <p class="tax-desc">Hardcoded sleep() assumptions failing under CPU scheduler contention and CI runner latency spikes.</p>
         </div>
-      </div>
-    </div>
-
-    <div class="benchmark-table-wrapper">
-      <table class="benchmark-table" id="results-table">
-        <thead>
-          <tr>
-            <th>Case ID</th>
-            <th>Flaky Test Target</th>
-            <th>Ground Truth Category</th>
-            <th>Baseline</th>
-            <th>Agent Diagnosis</th>
-            <th>Code Citation</th>
-            <th>Verification</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <!-- Populated dynamically via app.js -->
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- Interactive Trajectory Explorer -->
-  <section id="trajectories" class="section-container">
-    <div class="section-header">
-      <h2 class="section-title">Interactive Trajectory Explorer</h2>
-      <p class="section-desc">Inspect the step-by-step reasoning, empirical tool findings, and verification audit for any case.</p>
-    </div>
-
-    <div class="trajectory-explorer-grid">
-      <!-- Case Selector Column -->
-      <div class="case-selector-pane">
-        <div class="selector-header">Select Evaluation Case</div>
-        <div class="case-list" id="case-list">
-          <!-- Populated by app.js -->
+        <div class="tax-card">
+          <div class="tax-icon">🔀</div>
+          <div class="tax-name">Order Dependence</div>
+          <p class="tax-desc">Test assumes preceding tests populated database records; fails in isolated or randomized runs.</p>
         </div>
-      </div>
-
-      <!-- Trajectory Stepper & Inspector -->
-      <div class="trajectory-viewer-pane">
-        <div class="viewer-header">
-          <div class="case-headline" id="active-case-title">Loading Case...</div>
-          <div class="case-badge" id="active-case-badge">VERIFIED</div>
+        <div class="tax-card">
+          <div class="tax-icon">🌐</div>
+          <div class="tax-name">Flaky External Dependency</div>
+          <p class="tax-desc">Unmocked socket/DNS/HTTP network calls to remote endpoints subject to connection refusal.</p>
         </div>
-
-        <div class="stepper-controls">
-          <button class="btn-step" id="btn-prev-step">◀ Previous Step</button>
-          <span class="step-indicator" id="step-indicator">Step 1 of 5</span>
-          <button class="btn-step" id="btn-next-step">Next Step ▶</button>
-          <button class="btn-step autoplay" id="btn-autoplay">▶ Auto-Play</button>
+        <div class="tax-card">
+          <div class="tax-icon">📁</div>
+          <div class="tax-name">Resource Exhaustion</div>
+          <p class="tax-desc">Unclosed file handles or connection pool leaks causing OS permission and descriptor starvation.</p>
         </div>
-
-        <div class="step-detail-card" id="step-card">
-          <div class="step-badge" id="step-action-badge">ACTION: read_test_file</div>
-          <h3 class="step-title" id="step-title">Initial Test Context Analysis</h3>
-          <div class="step-content-box" id="step-content">
-            <!-- Step JSON / details -->
-          </div>
+        <div class="tax-card">
+          <div class="tax-icon">🕰️</div>
+          <div class="tax-name">DateTime / Clock Drift</div>
+          <p class="tax-desc">Mixing naive datetime.now() with UTC-aware timestamps or midnight date boundary roll-overs.</p>
         </div>
-
-        <div class="diagnosis-summary-card" id="diagnosis-card">
-          <div class="diag-header">FINAL VERIFIED DIAGNOSIS</div>
-          <div class="diag-body">
-            <div class="diag-row">
-              <span class="diag-label">Taxonomy Category:</span>
-              <span class="diag-val" id="diag-cat">race_condition</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">Root Cause:</span>
-              <span class="diag-val" id="diag-cause">...</span>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">Evidence Line:</span>
-              <code class="diag-code" id="diag-evidence">seeded_repo/src/counter.py:14</code>
-            </div>
-            <div class="diag-row">
-              <span class="diag-label">Proposed Fix:</span>
-              <code class="diag-code fix" id="diag-fix">...</code>
-            </div>
-          </div>
+        <div class="tax-card">
+          <div class="tax-icon">🎲</div>
+          <div class="tax-name">Unseeded Randomness</div>
+          <p class="tax-desc">Non-deterministic random choice generators producing edge cases that fail strict validation logic.</p>
+        </div>
+        <div class="tax-card">
+          <div class="tax-icon">🧪</div>
+          <div class="tax-name">Environment Mutation</div>
+          <p class="tax-desc">Direct os.environ mutations without teardown monkeypatching, contaminating downstream test suites.</p>
+        </div>
+        <div class="tax-card highlight">
+          <div class="tax-icon">⚠️</div>
+          <div class="tax-name">Hard Ambiguous Case</div>
+          <p class="tax-desc">Apparent timeout errors caused by uncoordinated async socket initialization and TIME_WAIT collisions.</p>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- Root-Cause Taxonomy Grid -->
-  <section id="taxonomy" class="section-container">
-    <div class="section-header">
-      <h2 class="section-title">Flaky Test Taxonomy Matrix</h2>
-      <p class="section-desc">Comprehensive classification of non-deterministic failure modes in modern software systems.</p>
-    </div>
-
-    <div class="taxonomy-grid">
-      <div class="tax-card">
-        <div class="tax-icon">⚡</div>
-        <div class="tax-name">Race Condition</div>
-        <p class="tax-desc">Unsynchronized concurrent threads or async tasks mutating shared dictionaries/state.</p>
-      </div>
-      <div class="tax-card">
-        <div class="tax-icon">💧</div>
-        <div class="tax-name">Shared State Leak</div>
-        <p class="tax-desc">Class-level singletons or global caches not purged between independent test instances.</p>
-      </div>
-      <div class="tax-card">
-        <div class="tax-icon">⏱️</div>
-        <div class="tax-name">Timing / Sleep Drift</div>
-        <p class="tax-desc">Hardcoded sleep() intervals failing under CPU load or scheduler latency fluctuations.</p>
-      </div>
-      <div class="tax-card">
-        <div class="tax-icon">🔀</div>
-        <div class="tax-name">Order Dependence</div>
-        <p class="tax-desc">Test assumes preceding tests populated database records; fails in isolated or shuffled runs.</p>
-      </div>
-      <div class="tax-card">
-        <div class="tax-icon">🌐</div>
-        <div class="tax-name">Flaky External Dependency</div>
-        <p class="tax-desc">Unmocked socket/DNS/HTTP requests to remote endpoints subject to network drops.</p>
-      </div>
-      <div class="tax-card">
-        <div class="tax-icon">📁</div>
-        <div class="tax-name">Resource Exhaustion</div>
-        <p class="tax-desc">Unclosed file handles or connection pool leaks causing OS permission and descriptor errors.</p>
-      </div>
-      <div class="tax-card">
-        <div class="tax-icon">🕰️</div>
-        <div class="tax-name">DateTime / Clock Drift</div>
-        <p class="tax-desc">Mixing naive datetime.now() with UTC-aware datetime or midnight clock boundary roll-overs.</p>
-      </div>
-      <div class="tax-card">
-        <div class="tax-icon">🎲</div>
-        <div class="tax-name">Unseeded Randomness</div>
-        <p class="tax-desc">Non-deterministic random token generators producing edge cases that fail validators.</p>
-      </div>
-      <div class="tax-card">
-        <div class="tax-icon">🧪</div>
-        <div class="tax-name">Environment Mutation</div>
-        <p class="tax-desc">Direct os.environ mutations without teardown monkeypatching, contaminating downstream tests.</p>
-      </div>
-      <div class="tax-card highlight">
-        <div class="tax-icon">⚠️</div>
-        <div class="tax-name">Hard Ambiguous Case</div>
-        <p class="tax-desc">Apparent timeout errors caused by socket TIME_WAIT port collisions without SO_REUSEADDR.</p>
-      </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-container">
       <div class="footer-left">
-        <strong>FlakyGuard Agent</strong> • Built for the micro1 Agentic Workflows Hackathon
+        <strong>FlakyGuard</strong> • Built for the micro1 Agentic Workflows Hackathon
       </div>
       <div class="footer-right">
-        <span>Verified Execution • 10/10 Score • Strict Anti-Hallucination Mode</span>
+        <span>Verified Execution • 10/10 Score • Strict Anti-Hallucination Gate</span>
       </div>
     </div>
   </footer>

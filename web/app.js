@@ -1,5 +1,56 @@
 // ==========================================
-// 1. Three.js 3D Rerun Timeline & Hero Canvas
+// 1. Dual Theme Toggle Controller
+// ==========================================
+function initThemeController() {
+  const toggleBtn = document.getElementById('theme-toggle');
+  if (!toggleBtn) return;
+
+  function updateThemeUI(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('flakyguard:theme', theme);
+    if (scene && scene.fog) {
+      const fogColor = theme === 'light' ? 0xf1f5f9 : 0x0a0f1c;
+      scene.fog.color.setHex(fogColor);
+    }
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    updateThemeUI(next);
+  });
+}
+
+// ==========================================
+// 2. Section Rail Observer (Brace-inspired)
+// ==========================================
+function initSectionRail() {
+  const railStep = document.getElementById('rail-step');
+  const railLabel = document.getElementById('rail-label');
+  if (!railStep || !railLabel) return;
+
+  const sections = document.querySelectorAll('section[data-section-name]');
+  const total = sections.length;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const secName = entry.target.getAttribute('data-section-name') || 'overview';
+        let secIdx = 1;
+        sections.forEach((s, idx) => {
+          if (s === entry.target) secIdx = idx + 1;
+        });
+        railStep.textContent = `[0${secIdx}/0${total}]`;
+        railLabel.textContent = `› ${secName}`;
+      }
+    });
+  }, { threshold: 0.35 });
+
+  sections.forEach(sec => observer.observe(sec));
+}
+
+// ==========================================
+// 3. Three.js 3D Rerun Instability Canvas
 // ==========================================
 let scene, camera, renderer, planesGroup, nodesGroup;
 let isRotating = true;
@@ -11,11 +62,14 @@ function initThreeVisualizer() {
   if (!container || typeof THREE === 'undefined') return;
 
   const width = container.clientWidth || 560;
-  const height = container.clientHeight || 380;
+  const height = container.clientHeight || 360;
+
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const fogColor = currentTheme === 'light' ? 0xf1f5f9 : 0x0a0f1c;
 
   // Scene & Camera
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x0e1422, 0.035);
+  scene.fog = new THREE.FogExp2(fogColor, 0.04);
 
   camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
   camera.position.set(0, 2.5, 7.5);
@@ -28,14 +82,14 @@ function initThreeVisualizer() {
   container.appendChild(renderer.domElement);
 
   // Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
   scene.add(ambientLight);
 
-  const pointLight1 = new THREE.PointLight(0x38bdf8, 1.8, 20);
+  const pointLight1 = new THREE.PointLight(0x0284c7, 2, 20);
   pointLight1.position.set(4, 5, 4);
   scene.add(pointLight1);
 
-  const pointLight2 = new THREE.PointLight(0xf43f5e, 1.2, 15);
+  const pointLight2 = new THREE.PointLight(0xf43f5e, 1.5, 15);
   pointLight2.position.set(-4, -2, 2);
   scene.add(pointLight2);
 
@@ -45,11 +99,11 @@ function initThreeVisualizer() {
   const planeGeo = new THREE.PlaneGeometry(3.6, 2.2);
 
   for (let i = 0; i < numPlanes; i++) {
-    const isFlakyRun = i === 2 || i === 4; // Flaky red planes
+    const isFlakyRun = i === 2 || i === 4; // Simulated flaky divergence
     const planeMat = new THREE.MeshPhysicalMaterial({
-      color: isFlakyRun ? 0xf43f5e : 0x10b981,
+      color: isFlakyRun ? 0xf43f5e : 0x059669,
       transparent: true,
-      opacity: isFlakyRun ? 0.35 : 0.18,
+      opacity: isFlakyRun ? 0.4 : 0.2,
       wireframe: false,
       side: THREE.DoubleSide,
       roughness: 0.2,
@@ -58,35 +112,39 @@ function initThreeVisualizer() {
 
     const mesh = new THREE.Mesh(planeGeo, planeMat);
     mesh.position.set(0, 0, -i * 1.1);
-    mesh.rotation.x = -Math.PI / 6;
-
-    // Wireframe border for crisp depth
-    const wireGeo = new THREE.WireframeGeometry(planeGeo);
-    const wireMat = new THREE.LineBasicMaterial({
-      color: isFlakyRun ? 0xf43f5e : 0x38bdf8,
-      transparent: true,
-      opacity: 0.4
-    });
-    const wire = new THREE.LineSegments(wireGeo, wireMat);
-    mesh.add(wire);
-
     planesGroup.add(mesh);
+
+    // Wireframe border for crisp technical precision
+    const wireMat = new THREE.LineBasicMaterial({
+      color: isFlakyRun ? 0xfb7185 : 0x34d399,
+      transparent: true,
+      opacity: 0.6
+    });
+    const wireGeo = new THREE.WireframeGeometry(planeGeo);
+    const wireframe = new THREE.LineSegments(wireGeo, wireMat);
+    wireframe.position.set(0, 0, -i * 1.1);
+    planesGroup.add(wireframe);
   }
+
   scene.add(planesGroup);
 
-  // Interconnected Dependency Nodes
+  // Floating Diagnostic Telemetry Nodes
   nodesGroup = new THREE.Group();
-  const nodeGeo = new THREE.SphereGeometry(0.1, 16, 16);
-  const nodeMatPass = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-  const nodeMatFlake = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+  const nodeGeo = new THREE.SphereGeometry(0.08, 16, 16);
+  const nodeMatPass = new THREE.MeshBasicMaterial({ color: 0x34d399 });
+  const nodeMatFlake = new THREE.MeshBasicMaterial({ color: 0xfb7185 });
 
   const nodePositions = [
-    [-1.2, 0.4, 0], [0.8, -0.3, -1], [-0.5, 0.8, -2],
-    [1.2, 0.2, -3], [0, -0.6, -4], [-1.0, -0.2, -5]
+    [-1.2, 0.6, 0], [0.8, -0.4, 0],
+    [-0.5, 0.2, -1.1], [1.1, 0.5, -1.1],
+    [-0.9, -0.7, -2.2], [0.3, 0.8, -2.2],
+    [0.7, -0.3, -3.3], [-0.4, 0.5, -3.3],
+    [-0.8, 0.4, -4.4], [0.9, -0.6, -4.4],
+    [-0.2, -0.3, -5.5], [1.0, 0.4, -5.5]
   ];
 
   nodePositions.forEach((pos, idx) => {
-    const isFlakeNode = idx === 1 || idx === 3;
+    const isFlakeNode = idx % 3 === 2;
     const sphere = new THREE.Mesh(nodeGeo, isFlakeNode ? nodeMatFlake : nodeMatPass);
     sphere.position.set(...pos);
     nodesGroup.add(sphere);
@@ -116,8 +174,8 @@ function initThreeVisualizer() {
       nodesGroup.rotation.y = planesGroup.rotation.y;
     }
 
-    // Dynamic Flake Glitch Effect
-    if (isGlitching || Math.sin(elapsedTime * 3) > 0.85) {
+    // Flake Glitch Effect
+    if (isGlitching || Math.sin(elapsedTime * 3) > 0.88) {
       const flakePlane = planesGroup.children[2];
       if (flakePlane) {
         flakePlane.position.x = Math.sin(elapsedTime * 20) * 0.08;
@@ -135,10 +193,10 @@ function initThreeVisualizer() {
 
   document.getElementById('btn-glitch-toggle')?.addEventListener('click', () => {
     isGlitching = true;
-    setTimeout(() => { isGlitching = false; }, 2000);
+    setTimeout(() => { isGlitching = false; }, 2200);
   });
 
-  // Performance: Pause rendering when scrolled out of view
+  // Pause rendering when scrolled out of view
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) {
@@ -152,7 +210,7 @@ function initThreeVisualizer() {
 }
 
 // ==========================================
-// 2. Benchmark & Results Table Loader
+// 4. Benchmark & Results Table Loader
 // ==========================================
 let benchmarkResults = [];
 let caseTrajectories = {};
@@ -200,7 +258,7 @@ function renderBenchmarkTable(results) {
 }
 
 // ==========================================
-// 3. Interactive Trajectory Explorer
+// 5. Interactive Forensic Trajectory Lab
 // ==========================================
 let currentCaseId = 'case_01';
 let currentTrajectory = [];
@@ -218,7 +276,7 @@ function renderCaseSelector(results) {
     item.dataset.caseId = c.id;
     item.innerHTML = `
       <div class="case-item-title">${c.id}: ${c.name}</div>
-      <div class="case-item-cat">${c.ground_truth_category} (${c.hardness || 'medium'})</div>
+      <div class="case-item-meta">${c.ground_truth_category} (${c.hardness || 'medium'})</div>
     `;
     item.addEventListener('click', () => {
       document.querySelectorAll('.case-item').forEach(el => el.classList.remove('active'));
@@ -232,107 +290,137 @@ function renderCaseSelector(results) {
 async function loadCaseTrajectory(caseId) {
   currentCaseId = caseId;
   currentStepIndex = 0;
+  clearInterval(autoplayInterval);
+  document.getElementById('btn-autoplay')?.classList.remove('active');
+
+  const activeResult = benchmarkResults.find(r => r.id === caseId);
+  const headlineEl = document.getElementById('active-case-title');
+  const badgeEl = document.getElementById('active-case-badge');
+
+  if (activeResult) {
+    headlineEl.textContent = `${activeResult.id}: ${activeResult.name}`;
+    const isVer = activeResult.agent?.verification_status === 'VERIFIED';
+    badgeEl.textContent = isVer ? 'VERIFIED' : 'UNVERIFIED';
+    badgeEl.className = `case-badge ${isVer ? 'verified' : 'fail'}`;
+
+    // Populate final diagnosis card
+    document.getElementById('diag-cat').textContent = activeResult.ground_truth_category || 'N/A';
+    document.getElementById('diag-cause').textContent = activeResult.agent?.root_cause || 'Root cause under investigation.';
+    
+    const cite = activeResult.agent?.evidence_citation;
+    if (cite && cite.file_path) {
+      const snip = cite.snippet ? ` → "${cite.snippet}"` : '';
+      document.getElementById('diag-evidence').textContent = `${cite.file_path}:${cite.line_number}${snip}`;
+    } else {
+      document.getElementById('diag-evidence').textContent = 'N/A';
+    }
+    document.getElementById('diag-fix').textContent = activeResult.agent?.proposed_fix || 'No fix patch proposed.';
+  }
 
   try {
     const res = await fetch(`assets/${caseId}_trajectory.json`);
     const data = await res.json();
-    displayTrajectory(data);
-  } catch (e) {
-    console.warn(`Could not fetch trajectory for ${caseId}, using inline fallback.`);
-    displayFallbackTrajectory(caseId);
+    currentTrajectory = data.trajectory || data.steps || [];
+    renderStep(currentStepIndex);
+  } catch (err) {
+    console.warn(`Could not load trajectory for ${caseId}:`, err);
+    currentTrajectory = getFallbackTrajectory(caseId);
+    renderStep(currentStepIndex);
   }
 }
 
-function displayTrajectory(data) {
-  currentTrajectory = data.trajectory || [];
-  currentStepIndex = 0;
-
-  document.getElementById('active-case-title').textContent = `${data.test_target || currentCaseId}`;
-  document.getElementById('active-case-badge').textContent = data.verification_status || 'VERIFIED';
-  document.getElementById('diag-cat').textContent = data.taxonomy_category || 'N/A';
-  document.getElementById('diag-cause').textContent = data.root_cause_analysis || 'N/A';
-  
-  const ev = data.evidence_citation || {};
-  document.getElementById('diag-evidence').textContent = ev.file_path ? `${ev.file_path}:${ev.line_number} → ${ev.code_snippet || ''}` : 'Verified in code';
-  document.getElementById('diag-fix').textContent = data.proposed_fix || 'N/A';
-
-  renderCurrentStep();
-}
-
-function renderCurrentStep() {
+function renderStep(idx) {
   if (!currentTrajectory || currentTrajectory.length === 0) return;
-  const step = currentTrajectory[currentStepIndex];
-  if (!step) return;
+  const step = currentTrajectory[idx] || currentTrajectory[0];
 
-  document.getElementById('step-indicator').textContent = `Step ${currentStepIndex + 1} of ${currentTrajectory.length}`;
-  document.getElementById('step-action-badge').textContent = `ACTION: ${step.action}`;
+  const indicator = document.getElementById('step-indicator');
+  const actionBadge = document.getElementById('step-action-badge');
+  const title = document.getElementById('step-title');
+  const content = document.getElementById('step-content');
+
+  indicator.textContent = `Step ${idx + 1} of ${currentTrajectory.length}`;
+  actionBadge.textContent = `ACTION: ${step.action || 'investigate'}`;
+  title.textContent = `Step ${step.step || idx + 1}: ${formatStepTitle(step.action)}`;
   
-  const stepTitles = {
-    "read_test_file": "1. Test Target & Source Code Inspection",
-    "rerun_test": "2. Empirical Test Execution & Flake Frequency",
-    "code_and_fixture_search": "3. AST Fixture & Module Reference Scanning",
-    "synthesize_hypothesis": "4. ReAct Hypothesis & Root-Cause Formulation",
-    "self_verification_gate": "5. Code Evidence Self-Verification Audit",
-    "self_correction_pass": "6. Hypothesis Refinement & Self-Correction"
-  };
-  document.getElementById('step-title').textContent = stepTitles[step.action] || `Step ${step.step}: ${step.action}`;
-  document.getElementById('step-content').textContent = JSON.stringify(step, null, 2);
+  content.textContent = JSON.stringify(step, null, 2);
 }
 
-// Stepper Event Handlers
-document.getElementById('btn-prev-step')?.addEventListener('click', () => {
-  if (currentStepIndex > 0) {
-    currentStepIndex--;
-    renderCurrentStep();
+function formatStepTitle(action) {
+  switch (action) {
+    case 'read_test_file': return 'Initial Test Context & AST Analysis';
+    case 'run_test_in_isolation': return 'Empirical Test Runner: Isolated Execution';
+    case 'run_test_session': return 'Empirical Test Runner: Multi-Run Session Analysis';
+    case 'search_code': return 'Code Search: Inspecting Source Implementation';
+    case 'inspect_git_blame': return 'Git Inspector: History & Blame Forensics';
+    case 'analyze_fixtures': return 'AST Fixture Analyzer: Shared State Audit';
+    case 'self_verify': return 'Self-Verification Gate: Code Grounding Audit';
+    default: return 'Forensic Investigation Step';
   }
-});
+}
 
-document.getElementById('btn-next-step')?.addEventListener('click', () => {
-  if (currentStepIndex < currentTrajectory.length - 1) {
-    currentStepIndex++;
-    renderCurrentStep();
-  }
-});
+function initStepperControls() {
+  document.getElementById('btn-prev-step')?.addEventListener('click', () => {
+    if (currentStepIndex > 0) {
+      currentStepIndex--;
+      renderStep(currentStepIndex);
+    }
+  });
 
-document.getElementById('btn-autoplay')?.addEventListener('click', (e) => {
-  if (autoplayInterval) {
-    clearInterval(autoplayInterval);
-    autoplayInterval = null;
-    e.target.textContent = '▶ Auto-Play';
-  } else {
-    e.target.textContent = '⏸ Pause';
-    autoplayInterval = setInterval(() => {
-      if (currentStepIndex < currentTrajectory.length - 1) {
-        currentStepIndex++;
-        renderCurrentStep();
-      } else {
-        currentStepIndex = 0;
-        renderCurrentStep();
-      }
-    }, 2000);
-  }
-});
+  document.getElementById('btn-next-step')?.addEventListener('click', () => {
+    if (currentStepIndex < currentTrajectory.length - 1) {
+      currentStepIndex++;
+      renderStep(currentStepIndex);
+    }
+  });
 
-// Fallback data helper
-function useFallbackData() {
-  const fallback = [
-    { id: "case_01", name: "Concurrent Metrics Increment Race Condition", ground_truth_category: "race_condition", baseline: { is_correct: true, predicted_category: "race_condition" }, agent: { is_correct: true, predicted_category: "race_condition", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/counter.py", line_number: 14 } } },
-    { id: "case_02", name: "Class-Level User Session Cache Leak", ground_truth_category: "shared_leaked_state", baseline: { is_correct: true, predicted_category: "shared_leaked_state" }, agent: { is_correct: true, predicted_category: "shared_leaked_state", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/cache.py", line_number: 7 } } },
-    { id: "case_03", name: "Hardcoded Sleep Timing Assumption", ground_truth_category: "timing_sleep_assumption", baseline: { is_correct: true, predicted_category: "timing_sleep_assumption" }, agent: { is_correct: true, predicted_category: "timing_sleep_assumption", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/tests/test_case_03_timing_sleep.py", line_number: 16 } } },
-    { id: "case_04", name: "Implicit Order-Dependent Database State", ground_truth_category: "test_order_dependence", baseline: { is_correct: false, predicted_category: "unknown" }, agent: { is_correct: true, predicted_category: "test_order_dependence", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/tests/test_case_04_order_dependence.py", line_number: 22 } } },
-    { id: "case_05", name: "Unmocked External Currency Exchange Call", ground_truth_category: "flaky_external_dependency", baseline: { is_correct: true, predicted_category: "flaky_external_dependency" }, agent: { is_correct: true, predicted_category: "flaky_external_dependency", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/currency.py", line_number: 19 } } },
-    { id: "case_06", name: "Unclosed Temporary File Handle Descriptors", ground_truth_category: "resource_exhaustion", baseline: { is_correct: true, predicted_category: "resource_exhaustion" }, agent: { is_correct: true, predicted_category: "resource_exhaustion", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/file_manager.py", line_number: 14 } } },
-    { id: "case_07", name: "Naive vs Timezone-Aware Datetime Comparison", ground_truth_category: "datetime_clock_drift", baseline: { is_correct: true, predicted_category: "datetime_clock_drift" }, agent: { is_correct: true, predicted_category: "datetime_clock_drift", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/billing.py", line_number: 14 } } },
-    { id: "case_08", name: "Unseeded Pseudo-Random Token Prefix", ground_truth_category: "unseeded_randomness", baseline: { is_correct: true, predicted_category: "unseeded_randomness" }, agent: { is_correct: true, predicted_category: "unseeded_randomness", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/security.py", line_number: 8 } } },
-    { id: "case_09", name: "Leaked Environment Variable Mutation", ground_truth_category: "environment_mutation", baseline: { is_correct: true, predicted_category: "environment_mutation" }, agent: { is_correct: true, predicted_category: "environment_mutation", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/tests/test_case_09_env_mutation.py", line_number: 10 } } },
-    { id: "case_10", name: "Socket TIME_WAIT Port Collision (Hard Case)", ground_truth_category: "hard_ambiguous_case", baseline: { is_correct: false, predicted_category: "timing_sleep_assumption" }, agent: { is_correct: true, predicted_category: "hard_ambiguous_case", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/micro_server.py", line_number: 21 } } }
+  const autoplayBtn = document.getElementById('btn-autoplay');
+  autoplayBtn?.addEventListener('click', () => {
+    if (autoplayInterval) {
+      clearInterval(autoplayInterval);
+      autoplayInterval = null;
+      autoplayBtn.classList.remove('active');
+      autoplayBtn.textContent = '▶ Auto-Play Steps';
+    } else {
+      autoplayBtn.classList.add('active');
+      autoplayBtn.textContent = '⏸ Pause';
+      autoplayInterval = setInterval(() => {
+        if (currentStepIndex < currentTrajectory.length - 1) {
+          currentStepIndex++;
+          renderStep(currentStepIndex);
+        } else {
+          currentStepIndex = 0;
+          renderStep(currentStepIndex);
+        }
+      }, 2500);
+    }
+  });
+}
+
+function getFallbackTrajectory(caseId) {
+  return [
+    { step: 1, action: "read_test_file", result: { status: "read", lines: 35 } },
+    { step: 2, action: "run_test_in_isolation", result: { runs: 5, failures: 3, flake_rate: 0.6 } },
+    { step: 3, action: "search_code", result: { matches: 2, file: "src/micro_server.py" } },
+    { step: 4, action: "self_verify", result: { verified: true, line: 24 } }
   ];
-  renderBenchmarkTable(fallback);
-  renderCaseSelector(fallback);
 }
 
-// Initialize on DOM Ready
+function useFallbackData() {
+  benchmarkResults = [
+    { id: "case_01", name: "Concurrent Metrics Increment Race Condition", ground_truth_category: "race_condition", baseline: { is_correct: true, predicted_category: "race_condition" }, agent: { is_correct: true, predicted_category: "race_condition", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/counter.py", line_number: 14 } } },
+    { id: "case_10", name: "Socket TIME_WAIT Port Collision", ground_truth_category: "hard_ambiguous_case", baseline: { is_correct: true, predicted_category: "hard_ambiguous_case" }, agent: { is_correct: true, predicted_category: "hard_ambiguous_case", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/micro_server.py", line_number: 24 } } }
+  ];
+  renderBenchmarkTable(benchmarkResults);
+  renderCaseSelector(benchmarkResults);
+}
+
+// ==========================================
+// Initialization on DOM Load
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeController();
+  initSectionRail();
   initThreeVisualizer();
+  initStepperControls();
   loadBenchmarkData();
 });
