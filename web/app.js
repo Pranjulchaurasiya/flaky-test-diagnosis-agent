@@ -15,7 +15,7 @@ function initThreeVisualizer() {
 
   // Scene & Camera
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x0d121c, 0.04);
+  scene.fog = new THREE.FogExp2(0x0e1422, 0.035);
 
   camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
   camera.position.set(0, 2.5, 7.5);
@@ -28,14 +28,14 @@ function initThreeVisualizer() {
   container.appendChild(renderer.domElement);
 
   // Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
   scene.add(ambientLight);
 
-  const pointLight1 = new THREE.PointLight(0x38bdf8, 2, 20);
+  const pointLight1 = new THREE.PointLight(0x38bdf8, 1.8, 20);
   pointLight1.position.set(4, 5, 4);
   scene.add(pointLight1);
 
-  const pointLight2 = new THREE.PointLight(0xf43f5e, 1.5, 15);
+  const pointLight2 = new THREE.PointLight(0xf43f5e, 1.2, 15);
   pointLight2.position.set(-4, -2, 2);
   scene.add(pointLight2);
 
