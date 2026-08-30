@@ -1,0 +1,112 @@
+[
+  {
+    "id": "case_01",
+    "name": "Concurrent Metrics Increment Race Condition",
+    "test_file": "seeded_repo/tests/test_case_01_race_condition.py",
+    "test_function": "test_concurrent_metric_increments",
+    "taxonomy_category": "race_condition",
+    "ground_truth_root_cause": "AsyncMetricsCounter increments self._counts dictionary across multiple threads without a threading.Lock mutex, resulting in lost updates due to concurrent read-modify-write collisions.",
+    "ground_truth_fix": "Add a threading.Lock() mutex to AsyncMetricsCounter and guard dictionary mutations inside with self._lock:.",
+    "hardness": "medium",
+    "expected_symptom": "AssertionError: Race condition detected! Expected 100 increments, got 87 (or intermittent value < 100)"
+  },
+  {
+    "id": "case_02",
+    "name": "Class-Level User Session Cache Leak",
+    "test_file": "seeded_repo/tests/test_case_02_shared_state.py",
+    "test_function": "test_fresh_session_count_b",
+    "taxonomy_category": "shared_leaked_state",
+    "ground_truth_root_cause": "UserSessionCache defines _STORE as a class attribute (shared across all instances), so state written by test_session_isolation_a persists and contaminates test_fresh_session_count_b.",
+    "ground_truth_fix": "Initialize self._store = {} as an instance attribute inside __init__, or add an autouse pytest teardown fixture that calls UserSessionCache.purge_all().",
+    "hardness": "easy",
+    "expected_symptom": "AssertionError: Leaked state detected! UserSessionCache should be empty for new test, but found 1 entries"
+  },
+  {
+    "id": "case_03",
+    "name": "Hardcoded Sleep Timing Assumption in Background Worker",
+    "test_file": "seeded_repo/tests/test_case_03_timing_sleep.py",
+    "test_function": "test_async_job_completion",
+    "taxonomy_category": "timing_sleep_assumption",
+    "ground_truth_root_cause": "Test assumes background job finishes within fixed time.sleep(0.05) (50ms), but BackgroundJobRunner worker duration is variable (40ms - 90ms), causing intermittent assertions under load.",
+    "ground_truth_fix": "Replace hardcoded time.sleep(0.05) with an active polling retry loop with a generous timeout: while not runner.is_finished(job_id) and time.time() - start < 1.0: time.sleep(0.01).",
+    "hardness": "easy",
+    "expected_symptom": "AssertionError: Timing flake! Job job_export_999 was expected to be finished within 50ms, but was still running."
+  },
+  {
+    "id": "case_04",
+    "name": "Implicit Order-Dependent Database State",
+    "test_file": "seeded_repo/tests/test_case_04_order_dependence.py",
+    "test_function": "test_delete_existing_order",
+    "taxonomy_category": "test_order_dependence",
+    "ground_truth_root_cause": "test_delete_existing_order implicitly relies on test_create_order_step running first in the same pytest session. When run in isolation or shuffled, the record does not exist.",
+    "ground_truth_fix": "Make each test self-contained by creating the target order inside a pytest fixture or within the setup of test_delete_existing_order.",
+    "hardness": "medium",
+    "expected_symptom": "KeyError: 'Order ORD-777 not found in database'"
+  },
+  {
+    "id": "case_05",
+    "name": "Unmocked External Currency Exchange Network Call",
+    "test_file": "seeded_repo/tests/test_case_05_unmocked_network.py",
+    "test_function": "test_currency_conversion_fallback",
+    "taxonomy_category": "flaky_external_dependency",
+    "ground_truth_root_cause": "CurrencyExchangeClient attempts an unmocked live TCP socket connection to closed local port 59199 on fallback currency pairs, causing immediate ConnectionRefusedError (fixture was changed from 192.0.2.1:80 to 127.0.0.1:59199 to eliminate 21-second OS TCP timeout during eval runs; root cause category is unchanged).",
+    "ground_truth_fix": "Mock socket.socket or patch CurrencyExchangeClient.convert with pytest-mock / unittest.mock to return deterministic conversion rates without live network calls.",
+    "hardness": "easy",
+    "expected_symptom": "ConnectionError: External currency upstream unreachable"
+  },
+  {
+    "id": "case_06",
+    "name": "Unclosed Temporary File Handle Descriptors",
+    "test_file": "seeded_repo/tests/test_case_06_resource_exhaustion.py",
+    "test_function": "test_temporary_chunk_allocation",
+    "taxonomy_category": "resource_exhaustion",
+    "ground_truth_root_cause": "LogChunkManager retains open file objects in self._open_handles without calling close() before unlinking. On Windows and OS file descriptor limits, unlinking an open file fails.",
+    "ground_truth_fix": "Explicitly close file handles (h.close()) before attempting os.unlink(h.name), or use tempfile.TemporaryDirectory() context manager.",
+    "hardness": "medium",
+    "expected_symptom": "AssertionError: Resource leak: temp file ... was not properly cleaned up (or PermissionError on file removal)"
+  },
+  {
+    "id": "case_07",
+    "name": "Naive vs Timezone-Aware Datetime Clock Comparison",
+    "test_file": "seeded_repo/tests/test_case_07_datetime_drift.py",
+    "test_function": "test_future_subscription_validity",
+    "taxonomy_category": "datetime_clock_drift",
+    "ground_truth_root_cause": "SubscriptionService compares datetime.now() (naive local clock) against a timezone-aware UTC datetime (datetime.now(timezone.utc)), causing TypeError: can't compare offset-naive and offset-aware datetimes.",
+    "ground_truth_fix": "Use datetime.now(timezone.utc) consistently across all calculations and ensure all timestamp inputs are converted to UTC before comparison.",
+    "hardness": "easy",
+    "expected_symptom": "TypeError: can't compare offset-naive and offset-aware datetimes"
+  },
+  {
+    "id": "case_08",
+    "name": "Unseeded Pseudo-Random Token Prefix Generation",
+    "test_file": "seeded_repo/tests/test_case_08_unseeded_random.py",
+    "test_function": "test_api_token_validity_batches",
+    "taxonomy_category": "unseeded_randomness",
+    "ground_truth_root_cause": "ApiTokenService randomly chooses initial characters from an alphabet containing '_' and '-', which violates format validation rules ~15% of runs.",
+    "ground_truth_fix": "Separate prefix generation to only draw from string.ascii_letters, or explicitly seed the random generator / mock token generation in tests.",
+    "hardness": "medium",
+    "expected_symptom": "AssertionError: Random token failure! Token '_...' failed format validation rules."
+  },
+  {
+    "id": "case_09",
+    "name": "Leaked Environment Variable Mutation",
+    "test_file": "seeded_repo/tests/test_case_09_env_mutation.py",
+    "test_function": "test_default_env_development",
+    "taxonomy_category": "environment_mutation",
+    "ground_truth_root_cause": "test_override_env_production mutates os.environ['APP_ENV'] = 'production' directly without restoring it in a fixture teardown or using monkeypatch, causing test_default_env_development to fail.",
+    "ground_truth_fix": "Use pytest's monkeypatch.setenv('APP_ENV', 'production') or a context manager / fixture that restores original os.environ after test execution.",
+    "hardness": "easy",
+    "expected_symptom": "AssertionError: Environment state contamination! Expected 'development' but got 'production'"
+  },
+  {
+    "id": "case_10",
+    "name": "Socket TIME_WAIT Port Collision (Hard Ambiguous Case)",
+    "test_file": "seeded_repo/tests/test_case_10_hard_ambiguous.py",
+    "test_function": "test_rapid_rpc_echo",
+    "taxonomy_category": "hard_ambiguous_case",
+    "ground_truth_root_cause": "MicroRpcServer.start() launches a background thread (_serve) with variable asynchronous startup latency (5-20ms). The test's hardcoded time.sleep(0.01) before connect() is shorter than the worst-case bind latency, causing sporadic TimeoutError. The fixture was revised from a synchronous bind (which made the test always pass) to an async bind with jitter so the flakiness empirically reproduces (~60% failure rate under consecutive runs). The original TIME_WAIT / SO_REUSEADDR description in the initial seed was not observed to reproduce locally.",
+    "ground_truth_fix": "Add a threading.Event() readiness signal inside _serve() and wait for it in start() before returning, or dynamically bind to port 0 (ephemeral port).",
+    "hardness": "hard",
+    "expected_symptom": "TimeoutError: timed out (client connect before server socket is bound)"
+  }
+]

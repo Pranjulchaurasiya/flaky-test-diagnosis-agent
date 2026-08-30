@@ -1,0 +1,83 @@
+{
+  "test_target": "seeded_repo/tests/test_case_03_timing_sleep.py::test_async_job_completion",
+  "taxonomy_category": "timing_sleep_assumption",
+  "root_cause_analysis": "The test `test_async_job_completion` relies on a hardcoded `time.sleep(0.05)` (50ms) to wait for a background job to complete. However, the `BackgroundJobRunner.submit_job` method in `seeded_repo/src/job_queue.py` simulates variable execution latency using `duration = 0.04 + (0.05 * random.random())`, which results in a completion time between 40ms and 90ms. When the random duration exceeds 50ms, the test's sleep expires before the job finishes, causing the assertion `runner.is_finished(job_id)` to fail. This creates a non-deterministic failure pattern dependent on the random latency generated during the test run.",
+  "evidence_citation": {
+    "file_path": "seeded_repo/tests/test_case_03_timing_sleep.py",
+    "line_number": 16,
+    "code_snippet": "time.sleep(0.05)"
+  },
+  "proposed_fix": "Replace the hardcoded sleep with a polling loop that waits for the job to complete with a timeout. For example:\n\n```python\ndef test_async_job_completion():\n    runner = BackgroundJobRunner()\n    job_id = \"job_export_999\"\n    runner.submit_job(job_id)\n\n    # Poll for completion with a timeout instead of fixed sleep\n    start_time = time.time()\n    timeout = 1.0  # 1 second timeout\n    while time.time() - start_time < timeout:\n        if runner.is_finished(job_id):\n            break\n        time.sleep(0.01)  # Small sleep to avoid busy waiting\n    \n    assert runner.is_finished(job_id), (\n        f\"Job {job_id} did not complete within {timeout} seconds.\"\n    )\n```",
+  "confidence": 0.98,
+  "verification_status": "VERIFIED",
+  "verifier_details": {
+    "verified": true,
+    "file_path": "seeded_repo/tests/test_case_03_timing_sleep.py",
+    "line_number": 16,
+    "verified_line_content": "time.sleep(0.05)"
+  },
+  "rerun_summary": {
+    "runs": 3,
+    "failures": 2,
+    "flake_rate": 0.67
+  },
+  "diagnosis_duration_sec": 8.778,
+  "trajectory": [
+    {
+      "step": 1,
+      "action": "read_test_file",
+      "target": "seeded_repo/tests/test_case_03_timing_sleep.py",
+      "result_summary": "Read 20 lines of test code."
+    },
+    {
+      "step": 2,
+      "action": "rerun_test",
+      "target": "seeded_repo/tests/test_case_03_timing_sleep.py::test_async_job_completion",
+      "result": {
+        "total_runs": 3,
+        "fail_count": 2,
+        "flake_rate": 0.67,
+        "is_intermittent_flaky": true,
+        "distinct_errors": [
+          "E   AssertionError: Timing flake! Job job_export_999 was expected to be finished within 50ms, but was still running. | E   assert False | E    +  where False = is_finished('job_export_999')"
+        ]
+      }
+    },
+    {
+      "step": 3,
+      "action": "code_and_fixture_search",
+      "imported_sources": [
+        "seeded_repo/src/job_queue.py"
+      ],
+      "ast_insights": {
+        "file": "seeded_repo/tests/test_case_03_timing_sleep.py",
+        "detected_fixtures": [],
+        "class_level_stores": [],
+        "explicit_globals": [],
+        "has_potential_shared_state": false
+      }
+    },
+    {
+      "step": 4,
+      "action": "synthesize_hypothesis",
+      "candidate_category": "timing_sleep_assumption",
+      "claimed_evidence": {
+        "file_path": "seeded_repo/tests/test_case_03_timing_sleep.py",
+        "line_number": 16,
+        "code_snippet": "time.sleep(0.05)"
+      }
+    },
+    {
+      "step": 5,
+      "action": "self_verification_gate",
+      "verification_passed": true,
+      "verifier_feedback": "Evidence successfully verified at seeded_repo/tests/test_case_03_timing_sleep.py:16 -> 'time.sleep(0.05)'",
+      "verified_data": {
+        "verified": true,
+        "file_path": "seeded_repo/tests/test_case_03_timing_sleep.py",
+        "line_number": 16,
+        "verified_line_content": "time.sleep(0.05)"
+      }
+    }
+  ]
+}

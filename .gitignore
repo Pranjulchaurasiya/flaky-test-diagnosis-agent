@@ -1,0 +1,57 @@
+# Environment variables and API keys
+.env
+.env.*
+!.env.example
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Testing, Analysis & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+.deepeval/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# Local Agent & Tool Runtime Caches
+.gstack/
+scratch/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs & Temporary Files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS Artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+#localmd files
+anti-hallucination-verification-prompt.md
