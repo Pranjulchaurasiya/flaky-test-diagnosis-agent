@@ -1,0 +1,40 @@
+name: 'FlakyGuard CI Diagnostic Action'
+description: 'Autonomous, tool-augmented diagnostic agent for investigating non-deterministic CI flaky test failures.'
+author: 'Pranjul Chaurasiya'
+branding:
+  icon: 'activity'
+  color: 'blue'
+
+inputs:
+  groq_api_key:
+    description: 'Groq API Key for agent LLM reasoning (qwen/qwen3.8-27b)'
+    required: true
+  test_target:
+    description: 'The pytest test identifier that failed (e.g., tests/test_orders.py::test_checkout)'
+    required: true
+  output_format:
+    description: 'Output format (markdown, json, summary)'
+    required: false
+    default: 'markdown'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install FlakyGuard Dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Run FlakyGuard Diagnostic Agent
+      shell: bash
+      env:
+        GROQ_API_KEY: ${{ inputs.groq_api_key }}
+        PYTHONPATH: ${{ github.action_path }}
+      run: |
+        python -m agent.cli diagnose "${{ inputs.test_target }}" --format "${{ inputs.output_format }}" >> $GITHUB_STEP_SUMMARY

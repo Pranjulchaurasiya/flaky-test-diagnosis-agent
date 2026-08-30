@@ -17,11 +17,11 @@
 <p align="center">
   <a href="https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/"><b>Enter the Forensic Lab (Live Demo) →</b></a>
   &nbsp;·&nbsp;
-  <a href="#quickstart">Quickstart</a>
+  <a href="#-how-to-use-flakyguard-4-flexible-options">How to Use (4 Options)</a>
   &nbsp;·&nbsp;
-  <a href="#benchmark-results-evalrun_evalpy">Benchmark Results</a>
+  <a href="#-rigorous-benchmark-evaluation">Benchmark Results</a>
   &nbsp;·&nbsp;
-  <a href="#architecture">Architecture</a>
+  <a href="#%EF%B8%8F-system-architecture">Architecture</a>
   &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Changelog</a>
 </p>
@@ -63,6 +63,100 @@ def increment(self, metric: str, amount: int = 1):
 ```
 
 **Outcome:** **100% grounded code verification**, zero hallucinations, and a permanent fix.
+
+---
+
+## 🚀 How to Use FlakyGuard (4 Flexible Options)
+
+You don't need to clone the repository manually. Choose the integration method that fits your workflow:
+
+```
+                  ┌─────────────────────────────────────────────────────────┐
+                  │                 HOW TO USE FLAKYGUARD                   │
+                  └──────┬───────────────┬────────────────┬───────────────┬─┘
+                         │               │                │               │
+                         ▼               ▼                ▼               ▼
+                  ┌──────────────┐┌──────────────┐┌──────────────┐┌──────────────┐
+                  │   Option 1   ││   Option 2   ││   Option 3   ││   Option 4   │
+                  │   Live Web   ││GitHub Actions││     CLI      ││  IDE / MCP   │
+                  │  Dashboard   ││  CI Action   ││  Tool (pip)  ││    Server    │
+                  └──────────────┘└──────────────┘└──────────────┘└──────────────┘
+```
+
+### Option 1: 🌐 Zero-Install Interactive Web Lab (Browser)
+Visit the live hosted dashboard with no installation or account required:
+👉 **[https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/](https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/)**
+- Inspect 3D rerun timelines and instability stacks in real-time.
+- Step through the interactive forensic reasoning trajectories for all 10 benchmark test cases.
+- Toggle between clean paper grey Light mode and deep bay Dark mode.
+
+---
+
+### Option 2: ⚡ GitHub Actions CI Integration (Automated on PRs)
+Add FlakyGuard to your `.github/workflows/ci.yml` to automatically investigate test failures directly in your pull requests:
+
+```yaml
+name: Test Suite & Flaky Diagnosis
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Pytest
+        id: pytest
+        run: pytest tests/
+        continue-on-error: true
+
+      - name: Diagnose Flaky Test with FlakyGuard
+        if: steps.pytest.outcome == 'failure'
+        uses: Pranjulchaurasiya/flaky-test-diagnosis-agent@main
+        with:
+          groq_api_key: ${{ secrets.GROQ_API_KEY }}
+          test_target: "tests/test_orders.py::test_concurrent_checkout"
+```
+
+---
+
+### Option 3: 📦 CLI / Pip Package (`pip install flakyguard`)
+Install and execute FlakyGuard directly in your local terminal or Docker containers:
+
+```bash
+# Install package
+pip install git+https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent.git
+
+# Set your API key
+export GROQ_API_KEY=gsk_your_groq_api_key_here
+
+# Run autonomous diagnosis
+flakyguard diagnose tests/test_concurrency.py::test_counter_race --format markdown
+```
+
+---
+
+### Option 4: 🔌 Model Context Protocol (MCP) Server for Cursor & Claude
+Connect FlakyGuard as a native tool in your AI coding assistant (Cursor, Claude Code, Antigravity):
+
+Add to your `claude_desktop_config.json` or Cursor MCP settings:
+```json
+{
+  "mcpServers": {
+    "flakyguard": {
+      "command": "python",
+      "args": ["-m", "mcp.server"],
+      "env": {
+        "GROQ_API_KEY": "gsk_your_groq_api_key_here"
+      }
+    }
+  }
+}
+```
+
+Now you can ask your AI IDE:
+> *"Why is `test_rapid_rpc_echo` failing intermittently in CI?"*
+> *(Your editor will call FlakyGuard's `diagnose_flaky_test` tool behind the scenes).*
 
 ---
 
@@ -166,9 +260,10 @@ flowchart TB
 
 ---
 
-## ⚡ Quickstart
+## ⚡ Local Developer Quickstart (For Contributors)
 
-### 1. Clone & Install Dependencies
+If you wish to run the full benchmark evaluation suite locally:
+
 ```bash
 git clone https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent.git
 cd flaky-test-diagnosis-agent
@@ -178,39 +273,13 @@ python -m venv .venv
 # On Linux/macOS:
 source .venv/bin/activate
 pip install -r requirements.txt
-```
 
-### 2. Configure Groq API Key
-Create a `.env` file in the root directory:
-```bash
-GROQ_API_KEY=gsk_your_groq_api_key_here
-```
-
-### 3. Run the Full Benchmark Evaluation
-```bash
+# Run full 10-case evaluation
 python eval/run_eval.py --mode full
-```
 
-### 4. Audit Evidence Grounding
-```bash
+# Run evidence audit
 python eval/audit_all_trajectories.py
 ```
-
-### 5. Launch the Local Web Dashboard
-```bash
-python -m http.server 8080 --directory web
-```
-Open **[http://localhost:8080](http://localhost:8080)** in your browser.
-
----
-
-## 🧭 The 15-Minute Tour
-
-1. **Open the Live Lab:** Visit **[https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/](https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/)**.
-2. **Inspect the 3D Timeline:** Observe the 3D depth stack simulating non-deterministic execution divergence. Click `⚡ simulate flake` to watch runtime jitter in real-time.
-3. **Toggle Light/Dark Facility Theme:** Use the top rail theme chip to switch between clean paper grey and deep dark chamber modes.
-4. **Step Through Trajectories:** Select any benchmark specimen (`case_01` to `case_10`) in the Forensic Trajectory Lab to trace the agent's 5-step Reason-Act-Verify trajectory.
-5. **Verify Line Grounding:** Check the code citation box for exact file and line references verified by the self-verification gate.
 
 ---
 

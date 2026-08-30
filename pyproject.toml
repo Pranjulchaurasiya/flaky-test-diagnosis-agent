@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flakyguard"
+version = "1.0.0"
+description = "Autonomous CI Diagnostic Agent for Non-Deterministic Tests"
+readme = "README.md"
+authors = [{ name = "Pranjul Chaurasiya" }]
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = [
+    "pytest>=8.0.0",
+    "groq>=0.9.0",
+    "python-dotenv>=1.0.0"
+]
+
+[project.scripts]
+flakyguard = "agent.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent"
+Documentation = "https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/"

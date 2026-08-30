@@ -53,5 +53,10 @@ venv.bak/
 .DS_Store
 Thumbs.db
 desktop.ini
-#localmd files
+
+# Local Markdown and Media
 anti-hallucination-verification-prompt.md
+demo/
+*.mp4
+*.wav
+*.avi
