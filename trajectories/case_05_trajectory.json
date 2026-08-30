@@ -1,14 +1,14 @@
 {
   "test_target": "seeded_repo/tests/test_case_05_unmocked_network.py::test_currency_conversion_fallback",
   "taxonomy_category": "flaky_external_dependency",
-  "root_cause_analysis": "The test `test_currency_conversion_fallback` fails because it invokes `CurrencyExchangeClient.convert` with `use_live_fallback=True` for a currency pair (\"USD_JPY\") not present in the static `RATES` dictionary. This triggers the fallback logic in `currency.py` which attempts to establish a raw TCP socket connection to `127.0.0.1:59199`. Since no service is listening on this port, the connection is immediately refused (or times out), raising a `ConnectionError`. The test does not mock this network interaction, making it dependent on the local network stack's behavior and the absence of a service on that port, which is an external dependency not controlled by the test environment.",
+  "root_cause_analysis": "The test `test_currency_conversion_fallback` fails because it invokes `CurrencyExchangeClient.convert` with `use_live_fallback=True` for a currency pair (\"USD_JPY\") that is not present in the static `RATES` dictionary. This triggers the fallback logic in `currency.py` which attempts to establish a raw TCP socket connection to `127.0.0.1:59199`. Since no service is listening on this port, the connection is immediately refused, raising a `ConnectionRefusedError`. The code catches this and re-raises it as a `ConnectionError`. The test does not mock this network interaction, making it dependent on the external (or local) network state, which is guaranteed to fail in this environment.",
   "evidence_citation": {
     "file_path": "seeded_repo/src/currency.py",
     "line_number": 19,
     "code_snippet": "s.connect((\"127.0.0.1\", 59199))  # Closed port triggering immediate connection refusal"
   },
-  "proposed_fix": "Mock the socket connection or the `convert` method's network fallback in the test. For example, use `unittest.mock.patch` to mock `socket.socket` or patch the `CurrencyExchangeClient.convert` method to return a deterministic value when `use_live_fallback` is True, ensuring no actual network I/O occurs during testing.",
-  "confidence": 0.98,
+  "proposed_fix": "Mock the socket connection or the `convert` method's network fallback in the test. For example, use `unittest.mock.patch` to mock `socket.socket` or patch the `CurrencyExchangeClient.convert` method to return a deterministic value when `use_live_fallback` is True, avoiding the actual network call.",
+  "confidence": 1.0,
   "verification_status": "VERIFIED",
   "verifier_details": {
     "verified": true,
@@ -21,7 +21,7 @@
     "failures": 3,
     "flake_rate": 1.0
   },
-  "diagnosis_duration_sec": 13.571,
+  "diagnosis_duration_sec": 20.598,
   "trajectory": [
     {
       "step": 1,
@@ -39,7 +39,7 @@
         "flake_rate": 1.0,
         "is_intermittent_flaky": false,
         "distinct_errors": [
-          "E   TimeoutError: timed out | E   ConnectionError: External currency upstream unreachable: timed out"
+          "E   ConnectionRefusedError: [Errno 111] Connection refused | E   ConnectionError: External currency upstream unreachable: [Errno 111] Connection refused"
         ]
       }
     },

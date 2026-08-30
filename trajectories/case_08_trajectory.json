@@ -1,13 +1,13 @@
 {
   "test_target": "seeded_repo/tests/test_case_08_unseeded_random.py::test_api_token_validity_batches",
   "taxonomy_category": "unseeded_randomness",
-  "root_cause_analysis": "The test `test_api_token_validity_batches` fails intermittently because `ApiTokenService.generate_token` uses `random.choice` with an alphabet that includes characters ('_', '-') which are explicitly rejected by `validate_token_format` if they appear as the first character. Since the random seed is not fixed, there is a non-zero probability (~15%) that a generated token starts with an invalid character, causing the assertion to fail. The flake rate of 0.33 over 3 runs is consistent with this probabilistic failure mode.",
+  "root_cause_analysis": "The test `test_api_token_validity_batches` fails non-deterministically because `ApiTokenService.generate_token` uses `random.choice` with an alphabet that includes characters ('_', '-') which are explicitly rejected by `validate_token_format` if they appear as the first character. Since the random seed is not fixed, there is a statistical probability (~15%) that a generated token will start with an invalid character, causing the assertion to fail intermittently. The empirical data showing 0/3 failures in the recent reruns is consistent with a probabilistic flake (it simply didn't hit the bad random sequence in those specific runs), but the initial traceback confirms the failure mode.",
   "evidence_citation": {
     "file_path": "seeded_repo/src/security.py",
     "line_number": 14,
     "code_snippet": "return \"\".join(random.choice(self.ALPHABET) for _ in range(length))"
   },
-  "proposed_fix": "Fix the `generate_token` method in `seeded_repo/src/security.py` to ensure the first character is always alphanumeric. For example:\n\n```python\ndef generate_token(self, length: int = 16) -> str:\n    if length < 1:\n        return \"\"\n    # Ensure first char is alphanumeric\n    first_char = random.choice(string.ascii_letters + string.digits)\n    rest = \"\".join(random.choice(self.ALPHABET) for _ in range(length - 1))\n    return first_char + rest\n```\n\nAlternatively, the test could be made deterministic by seeding the random generator, but fixing the generator to comply with its own validation rules is the more robust solution.",
+  "proposed_fix": "Fix the `generate_token` method in `seeded_repo/src/security.py` to ensure the first character is always alphanumeric, or remove invalid characters from the alphabet if they are not required. A robust fix is to force the first character to be from `string.ascii_letters + string.digits`:\n\n```python\ndef generate_token(self, length: int = 16) -> str:\n    if length < 1:\n        return \"\"\n    # Ensure first char is alphanumeric to satisfy validation\n    first_char = random.choice(string.ascii_letters + string.digits)\n    rest = \"\".join(random.choice(self.ALPHABET) for _ in range(length - 1))\n    return first_char + rest\n```",
   "confidence": 0.98,
   "verification_status": "VERIFIED",
   "verifier_details": {
@@ -18,10 +18,10 @@
   },
   "rerun_summary": {
     "runs": 3,
-    "failures": 1,
-    "flake_rate": 0.33
+    "failures": 0,
+    "flake_rate": 0.0
   },
-  "diagnosis_duration_sec": 9.918,
+  "diagnosis_duration_sec": 9.939,
   "trajectory": [
     {
       "step": 1,
@@ -35,12 +35,10 @@
       "target": "seeded_repo/tests/test_case_08_unseeded_random.py::test_api_token_validity_batches",
       "result": {
         "total_runs": 3,
-        "fail_count": 1,
-        "flake_rate": 0.33,
-        "is_intermittent_flaky": true,
-        "distinct_errors": [
-          "E   AssertionError: Random token failure! Token '_MP02_a77_pklCGY' failed format validation rules. | E   assert False | E    +  where False = validate_token_format('_MP02_a77_pklCGY')"
-        ]
+        "fail_count": 0,
+        "flake_rate": 0.0,
+        "is_intermittent_flaky": false,
+        "distinct_errors": []
       }
     },
     {

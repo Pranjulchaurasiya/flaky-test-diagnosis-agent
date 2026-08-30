@@ -25,21 +25,22 @@ if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
     Write-Err "Python 3.11+ is required. Install from https://python.org"
 }
 
-$pyVersion = python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+$pyVersion = python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")'
 Write-Ok "Python $pyVersion detected"
 
 # ── Virtual Environment ───────────────────────────────────────────────────────
+$pythonExec = "python"
 if (-not (Test-Path ".venv")) {
     Write-Info "Creating virtual environment..."
     python -m venv .venv
 }
 
-Write-Info "Activating virtual environment..."
-& .\.venv\Scripts\Activate.ps1
+if (Test-Path ".\.venv\Scripts\python.exe") {
+    $pythonExec = ".\.venv\Scripts\python.exe"
+}
 
-Write-Info "Installing dependencies..."
-pip install --quiet --upgrade pip
-pip install --quiet -r requirements.txt
+Write-Info "Installing dependencies via $pythonExec..."
+& $pythonExec -m pip install --quiet --disable-pip-version-check -r requirements.txt
 Write-Ok "Dependencies installed"
 
 # ── Environment variables ─────────────────────────────────────────────────────
@@ -59,25 +60,25 @@ switch ($Mode) {
     "web" {
         Write-Ok "Starting interactive Forensic Lab at http://localhost:8080 ..."
         Write-Host ""
-        python -m http.server 8080 --directory web
+        & $pythonExec -m http.server 8080 --directory web
     }
     "eval" {
         if (-not $groqKey) { Write-Err "GROQ_API_KEY required. Set `$env:GROQ_API_KEY or add to .env" }
         $evalMode = if ($env:EVAL_MODE) { $env:EVAL_MODE } else { "full" }
         Write-Info "Running benchmark evaluation (mode: $evalMode)..."
         Write-Host ""
-        python eval/run_eval.py --mode $evalMode
+        & $pythonExec eval/run_eval.py --mode $evalMode
     }
     "mcp" {
         if (-not $groqKey) { Write-Err "GROQ_API_KEY required." }
         Write-Info "Starting MCP server (stdio mode for Cursor / Claude Code)..."
-        python mcp/server.py
+        & $pythonExec mcp/server.py
     }
     "diagnose" {
         if (-not $groqKey) { Write-Err "GROQ_API_KEY required." }
         if (-not $Target)  { Write-Err "Usage: .\bootstrap.ps1 diagnose -Target <test_file::test_function>" }
         Write-Info "Diagnosing: $Target"
-        python -m agent.cli diagnose $Target
+        & $pythonExec -m agent.cli diagnose $Target
     }
     "help" {
         Write-Host ""

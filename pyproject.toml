@@ -19,6 +19,10 @@ dependencies = [
 [project.scripts]
 flakyguard = "agent.cli:main"
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent*", "mcp*"]
+
 [project.urls]
 Homepage = "https://github.com/Pranjulchaurasiya/flaky-test-diagnosis-agent"
 Documentation = "https://pranjulchaurasiya.github.io/flaky-test-diagnosis-agent/"

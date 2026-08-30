@@ -1,13 +1,13 @@
 {
   "test_target": "seeded_repo/tests/test_case_10_hard_ambiguous.py::test_rapid_rpc_echo",
   "taxonomy_category": "hard_ambiguous_case",
-  "root_cause_analysis": "The test fails due to a race condition between the server's asynchronous socket binding and the client's connection attempt. The `MicroRpcServer.start()` method spawns a background thread that binds the socket after a variable delay (simulating heavy boot time) of 5-20ms. The test relies on a hardcoded `time.sleep(0.01)` (10ms) to wait for the server to be ready. Because the server's startup delay can exceed 10ms, the client attempts to connect before the server socket is bound, resulting in a `TimeoutError` or connection failure. This is a 'hard ambiguous case' because the symptom (timeout) mimics a simple timing issue, but the root cause is the lack of synchronization primitives (like an `Event`) or dynamic port allocation to guarantee readiness.",
+  "root_cause_analysis": "The test exhibits a race condition between the server's asynchronous socket binding and the client's connection attempt. The `MicroRpcServer.start()` method spawns a background thread that introduces a variable artificial delay (5-20ms) before binding the socket. The test relies on a fixed `time.sleep(0.01)` (10ms) to wait for the server to be ready. Because the server's startup delay is non-deterministic and can exceed 10ms, the client often attempts to connect before the server socket is bound, resulting in `ConnectionRefusedError` or `TimeoutError`. This is a 'hard ambiguous case' because the symptom (timeout/refused) mimics a simple timing issue, but the root cause is the lack of a synchronization mechanism (like an `Event` or `Condition`) to signal when the server is actually ready to accept connections, combined with the use of a fixed port that prevents dynamic port allocation.",
   "evidence_citation": {
     "file_path": "seeded_repo/src/micro_server.py",
     "line_number": 24,
     "code_snippet": "time.sleep(0.005 + (0.015 * (time.time() % 1)))"
   },
-  "proposed_fix": "Replace the hardcoded sleep in the test with a synchronization mechanism. In `MicroRpcServer`, add a `threading.Event` that is set after the socket is bound and listening. In the test, wait for this event with a timeout instead of using `time.sleep`. Alternatively, use an ephemeral port (port=0) and retrieve the assigned port from the socket after binding to avoid port collisions and ensure the server is ready before connecting.",
+  "proposed_fix": "Replace the hardcoded sleep in the test with a synchronization mechanism. In `MicroRpcServer`, add a `threading.Event` that is set after `self.sock.listen(1)`. In the test, replace `time.sleep(0.01)` with `server.ready_event.wait(timeout=5.0)` to ensure the server is actually bound and listening before the client attempts to connect. Additionally, consider using an ephemeral port (port=0) in the server to avoid port collisions, though the primary fix for this specific flake is the synchronization event.",
   "confidence": 0.95,
   "verification_status": "VERIFIED",
   "verifier_details": {
@@ -18,10 +18,10 @@
   },
   "rerun_summary": {
     "runs": 3,
-    "failures": 3,
-    "flake_rate": 1.0
+    "failures": 2,
+    "flake_rate": 0.67
   },
-  "diagnosis_duration_sec": 12.959,
+  "diagnosis_duration_sec": 13.576,
   "trajectory": [
     {
       "step": 1,
@@ -35,11 +35,11 @@
       "target": "seeded_repo/tests/test_case_10_hard_ambiguous.py::test_rapid_rpc_echo",
       "result": {
         "total_runs": 3,
-        "fail_count": 3,
-        "flake_rate": 1.0,
-        "is_intermittent_flaky": false,
+        "fail_count": 2,
+        "flake_rate": 0.67,
+        "is_intermittent_flaky": true,
         "distinct_errors": [
-          "E   TimeoutError: timed out"
+          "E   ConnectionRefusedError: [Errno 111] Connection refused"
         ]
       }
     },

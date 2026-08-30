@@ -2,8 +2,13 @@ import argparse
 import sys
 import json
 import os
-from dotenv import load_dotenv
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+from dotenv import load_dotenv
 load_dotenv()
 
 from agent.llm import UnifiedLLMClient
@@ -21,7 +26,7 @@ def main():
     diag_parser.add_argument("test_target", help="Pytest target e.g. tests/test_orders.py::test_checkout")
     diag_parser.add_argument("--root", default=".", help="Root directory of the target codebase (default: .)")
     diag_parser.add_argument("--format", choices=["markdown", "json", "summary"], default="markdown", help="Output format")
-    diag_parser.add_argument("--model", default="groq/qwen/qwen3.8-27b", help="LLM model identifier")
+    diag_parser.add_argument("--model", default="qwen/qwen3.8-27b", help="LLM model identifier")
 
     # Command: verify
     verify_parser = subparsers.add_parser("verify", help="Run self-verification check on a diagnosis JSON file")
@@ -39,11 +44,16 @@ def main():
             print("⚠️ Error: GROQ_API_KEY is not set. Please set GROQ_API_KEY in your environment or .env file.", file=sys.stderr)
             sys.exit(1)
 
-        llm_client = UnifiedLLMClient(model=args.model)
+        model_name = args.model.replace("groq/", "")
+        llm_client = UnifiedLLMClient(model=model_name)
         agent = FlakyTestDiagnosisAgent(llm_client=llm_client, workspace_root=args.root)
 
         print(f"🔬 FlakyGuard starting forensic investigation on: {args.test_target}...", file=sys.stderr)
-        diagnosis = agent.diagnose(args.test_target)
+        if "::" in args.test_target:
+            test_file, test_function = args.test_target.split("::", 1)
+        else:
+            test_file, test_function = args.test_target, ""
+        diagnosis = agent.diagnose(test_file=test_file, test_function=test_function, initial_traceback="")
 
         if args.format == "json":
             print(json.dumps(diagnosis, indent=2))

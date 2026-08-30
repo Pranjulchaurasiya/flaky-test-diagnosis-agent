@@ -21,8 +21,8 @@ services:
       - "8080:8080"
     command: python -m http.server 8080 --directory /app/web
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
-      interval: 10s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080')"]
+      interval: 5s
       timeout: 5s
       retries: 3
     restart: unless-stopped
@@ -40,9 +40,7 @@ services:
     volumes:
       - .:/app
       - flakyguard-results:/app/eval/output
-    command: >
-      sh -c "python eval/run_eval.py --mode ${EVAL_MODE:-full} --output eval/output/results.json
-             && echo '=== Eval complete. Results at eval/output/results.json ==='"
+    command: ["python", "eval/run_eval.py", "--mode", "full", "--output", "eval/output/results.json"]
     depends_on:
       web:
         condition: service_healthy

@@ -102,3 +102,17 @@ class DiagnosisVerifier:
         assert verified_evidence["line_number"] == line_number
 
         return True, f"Evidence successfully verified at {normalized_path}:{line_number} -> '{actual_line}'", verified_evidence
+
+    def verify(self, diagnosis: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Convenience wrapper to verify a diagnosis dictionary directly.
+        """
+        category = diagnosis.get("taxonomy_category", "")
+        citation = diagnosis.get("evidence_citation", {})
+        explanation = diagnosis.get("root_cause_analysis", "")
+        passed, feedback, details = self.verify_hypothesis(category, citation, explanation)
+        return {
+            "verified": passed,
+            "feedback": feedback,
+            "details": details
+        }

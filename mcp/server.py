@@ -16,13 +16,20 @@ def diagnose_test(test_target: str, workspace_root: str = ".") -> dict:
     """
     llm_client = UnifiedLLMClient()
     agent = FlakyTestDiagnosisAgent(llm_client=llm_client, workspace_root=workspace_root)
-    return agent.diagnose(test_target)
+    if "::" in test_target:
+        test_file, test_function = test_target.split("::", 1)
+    else:
+        test_file, test_function = test_target, ""
+    return agent.diagnose(test_file=test_file, test_function=test_function, initial_traceback="")
+
+from agent.tools.code_search import CodeSearchTool
 
 def verify_diagnosis(diagnosis_data: dict, workspace_root: str = ".") -> dict:
     """
     Verify evidence citation in a diagnosis against the real codebase AST.
     """
-    verifier = DiagnosisVerifier(workspace_root=workspace_root)
+    code_search = CodeSearchTool(workspace_root=workspace_root)
+    verifier = DiagnosisVerifier(code_search=code_search)
     return verifier.verify(diagnosis_data)
 
 def handle_jsonrpc(line: str):
