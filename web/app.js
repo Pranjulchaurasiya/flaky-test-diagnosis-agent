@@ -1,41 +1,51 @@
 // ==========================================
-// 1. Dual Theme Toggle Controller
+// 1. Dual Theme Controller (Brace-inspired)
 // ==========================================
 function initThemeController() {
-  const toggleBtn = document.getElementById('theme-toggle');
+  const toggleBtn = document.getElementById('themeToggle');
+  const themeLabel = document.getElementById('themeLabel');
   if (!toggleBtn) return;
 
   function updateThemeUI(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('flakyguard:theme', theme);
+    try { localStorage.setItem('flakyguard:theme', theme); } catch(e) {}
+    if (themeLabel) {
+      themeLabel.textContent = theme === 'dark' ? 'light' : 'dark';
+    }
     if (scene && scene.fog) {
-      const fogColor = theme === 'light' ? 0xf1f5f9 : 0x0a0f1c;
+      const fogColor = theme === 'dark' ? 0x090d13 : 0xeceff4;
       scene.fog.color.setHex(fogColor);
     }
   }
 
+  // Set initial label
+  const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  if (themeLabel) {
+    themeLabel.textContent = initialTheme === 'dark' ? 'light' : 'dark';
+  }
+
   toggleBtn.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
     const next = current === 'dark' ? 'light' : 'dark';
     updateThemeUI(next);
   });
 }
 
 // ==========================================
-// 2. Section Rail Observer (Brace-inspired)
+// 2. Section Rail Observer
 // ==========================================
 function initSectionRail() {
   const railStep = document.getElementById('rail-step');
   const railLabel = document.getElementById('rail-label');
   if (!railStep || !railLabel) return;
 
-  const sections = document.querySelectorAll('section[data-section-name]');
+  const sections = document.querySelectorAll('section[data-sec]');
   const total = sections.length;
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const secName = entry.target.getAttribute('data-section-name') || 'overview';
+        const secName = entry.target.getAttribute('data-sec') || 'overview';
         let secIdx = 1;
         sections.forEach((s, idx) => {
           if (s === entry.target) secIdx = idx + 1;
@@ -44,13 +54,13 @@ function initSectionRail() {
         railLabel.textContent = `› ${secName}`;
       }
     });
-  }, { threshold: 0.35 });
+  }, { threshold: 0.3 });
 
   sections.forEach(sec => observer.observe(sec));
 }
 
 // ==========================================
-// 3. Three.js 3D Rerun Instability Canvas
+// 3. Three.js 3D Depth Stack
 // ==========================================
 let scene, camera, renderer, planesGroup, nodesGroup;
 let isRotating = true;
@@ -62,12 +72,11 @@ function initThreeVisualizer() {
   if (!container || typeof THREE === 'undefined') return;
 
   const width = container.clientWidth || 560;
-  const height = container.clientHeight || 360;
+  const height = container.clientHeight || 350;
 
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-  const fogColor = currentTheme === 'light' ? 0xf1f5f9 : 0x0a0f1c;
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  const fogColor = currentTheme === 'dark' ? 0x090d13 : 0xeceff4;
 
-  // Scene & Camera
   scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(fogColor, 0.04);
 
@@ -75,50 +84,44 @@ function initThreeVisualizer() {
   camera.position.set(0, 2.5, 7.5);
   camera.lookAt(0, 0, 0);
 
-  // Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(width, height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.appendChild(renderer.domElement);
 
-  // Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
   scene.add(ambientLight);
 
   const pointLight1 = new THREE.PointLight(0x0284c7, 2, 20);
   pointLight1.position.set(4, 5, 4);
   scene.add(pointLight1);
 
-  const pointLight2 = new THREE.PointLight(0xf43f5e, 1.5, 15);
+  const pointLight2 = new THREE.PointLight(0xcf1a10, 1.5, 15);
   pointLight2.position.set(-4, -2, 2);
   scene.add(pointLight2);
 
-  // Build Rerun Timeline Planes (Receding Stack)
   planesGroup = new THREE.Group();
   const numPlanes = 6;
   const planeGeo = new THREE.PlaneGeometry(3.6, 2.2);
 
   for (let i = 0; i < numPlanes; i++) {
-    const isFlakyRun = i === 2 || i === 4; // Simulated flaky divergence
+    const isFlakyRun = i === 2 || i === 4;
     const planeMat = new THREE.MeshPhysicalMaterial({
-      color: isFlakyRun ? 0xf43f5e : 0x059669,
+      color: isFlakyRun ? 0xcf1a10 : 0x097043,
       transparent: true,
-      opacity: isFlakyRun ? 0.4 : 0.2,
-      wireframe: false,
+      opacity: isFlakyRun ? 0.35 : 0.18,
       side: THREE.DoubleSide,
-      roughness: 0.2,
-      metalness: 0.1
+      roughness: 0.2
     });
 
     const mesh = new THREE.Mesh(planeGeo, planeMat);
     mesh.position.set(0, 0, -i * 1.1);
     planesGroup.add(mesh);
 
-    // Wireframe border for crisp technical precision
     const wireMat = new THREE.LineBasicMaterial({
-      color: isFlakyRun ? 0xfb7185 : 0x34d399,
+      color: isFlakyRun ? 0xff3b30 : 0x2fe08a,
       transparent: true,
-      opacity: 0.6
+      opacity: 0.55
     });
     const wireGeo = new THREE.WireframeGeometry(planeGeo);
     const wireframe = new THREE.LineSegments(wireGeo, wireMat);
@@ -128,19 +131,17 @@ function initThreeVisualizer() {
 
   scene.add(planesGroup);
 
-  // Floating Diagnostic Telemetry Nodes
   nodesGroup = new THREE.Group();
   const nodeGeo = new THREE.SphereGeometry(0.08, 16, 16);
-  const nodeMatPass = new THREE.MeshBasicMaterial({ color: 0x34d399 });
-  const nodeMatFlake = new THREE.MeshBasicMaterial({ color: 0xfb7185 });
+  const nodeMatPass = new THREE.MeshBasicMaterial({ color: 0x097043 });
+  const nodeMatFlake = new THREE.MeshBasicMaterial({ color: 0xcf1a10 });
 
   const nodePositions = [
     [-1.2, 0.6, 0], [0.8, -0.4, 0],
     [-0.5, 0.2, -1.1], [1.1, 0.5, -1.1],
     [-0.9, -0.7, -2.2], [0.3, 0.8, -2.2],
     [0.7, -0.3, -3.3], [-0.4, 0.5, -3.3],
-    [-0.8, 0.4, -4.4], [0.9, -0.6, -4.4],
-    [-0.2, -0.3, -5.5], [1.0, 0.4, -5.5]
+    [-0.8, 0.4, -4.4], [0.9, -0.6, -4.4]
   ];
 
   nodePositions.forEach((pos, idx) => {
@@ -152,7 +153,6 @@ function initThreeVisualizer() {
 
   scene.add(nodesGroup);
 
-  // Handle Resize
   window.addEventListener('resize', () => {
     if (!container) return;
     const w = container.clientWidth;
@@ -162,7 +162,6 @@ function initThreeVisualizer() {
     renderer.setSize(w, h);
   });
 
-  // Animation Loop
   let clock = new THREE.Clock();
   function animate() {
     animationFrameId = requestAnimationFrame(animate);
@@ -174,7 +173,6 @@ function initThreeVisualizer() {
       nodesGroup.rotation.y = planesGroup.rotation.y;
     }
 
-    // Flake Glitch Effect
     if (isGlitching || Math.sin(elapsedTime * 3) > 0.88) {
       const flakePlane = planesGroup.children[2];
       if (flakePlane) {
@@ -186,7 +184,6 @@ function initThreeVisualizer() {
   }
   animate();
 
-  // Controls Wiring
   document.getElementById('btn-tilt-toggle')?.addEventListener('click', () => {
     isRotating = !isRotating;
   });
@@ -195,25 +192,12 @@ function initThreeVisualizer() {
     isGlitching = true;
     setTimeout(() => { isGlitching = false; }, 2200);
   });
-
-  // Pause rendering when scrolled out of view
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) {
-        cancelAnimationFrame(animationFrameId);
-      } else {
-        animate();
-      }
-    });
-  }, { threshold: 0.1 });
-  observer.observe(container);
 }
 
 // ==========================================
-// 4. Benchmark & Results Table Loader
+// 4. Benchmark Table Loader
 // ==========================================
 let benchmarkResults = [];
-let caseTrajectories = {};
 
 async function loadBenchmarkData() {
   try {
@@ -245,13 +229,13 @@ function renderBenchmarkTable(results) {
     const citeText = evidence?.file_path ? `${evidence.file_path}:${evidence.line_number}` : 'N/A';
 
     tr.innerHTML = `
-      <td class="col-id"><strong>${c.id}</strong></td>
-      <td class="col-name"><div class="target-name">${c.name}</div></td>
-      <td class="col-cat"><span class="badge-pill">${c.ground_truth_category}</span></td>
-      <td class="col-baseline"><span class="badge-pill ${isBaselineCorrect ? 'pass' : 'fail'}">${isBaselineCorrect ? '✅ ' + c.baseline.predicted_category : '❌ ' + (c.baseline?.predicted_category || 'Fail')}</span></td>
-      <td class="col-agent"><span class="badge-pill ${isAgentCorrect ? 'pass' : 'fail'}">${isAgentCorrect ? '✅ ' + c.agent.predicted_category : '❌ Fail'}</span></td>
-      <td class="col-citation"><code>${citeText}</code></td>
-      <td class="col-verification"><span class="badge-pill ${verified ? 'verified' : 'fail'}">${verified ? 'VERIFIED' : 'UNVERIFIED'}</span></td>
+      <td><strong>${c.id}</strong></td>
+      <td><b>${c.name}</b></td>
+      <td><span class="badge">${c.ground_truth_category}</span></td>
+      <td><span class="badge ${isBaselineCorrect ? 'badge--pass' : 'badge--fail'}">${isBaselineCorrect ? '✅ ' + c.baseline.predicted_category : '❌ ' + (c.baseline?.predicted_category || 'Fail')}</span></td>
+      <td><span class="badge ${isAgentCorrect ? 'badge--pass' : 'badge--fail'}">${isAgentCorrect ? '✅ ' + c.agent.predicted_category : '❌ Fail'}</span></td>
+      <td><code>${citeText}</code></td>
+      <td><span class="badge ${verified ? 'badge--ver' : 'badge--fail'}">${verified ? 'VERIFIED' : 'UNVERIFIED'}</span></td>
     `;
     tbody.appendChild(tr);
   });
@@ -301,9 +285,8 @@ async function loadCaseTrajectory(caseId) {
     headlineEl.textContent = `${activeResult.id}: ${activeResult.name}`;
     const isVer = activeResult.agent?.verification_status === 'VERIFIED';
     badgeEl.textContent = isVer ? 'VERIFIED' : 'UNVERIFIED';
-    badgeEl.className = `case-badge ${isVer ? 'verified' : 'fail'}`;
+    badgeEl.className = `badge ${isVer ? 'badge--ver' : 'badge--fail'}`;
 
-    // Populate final diagnosis card
     document.getElementById('diag-cat').textContent = activeResult.ground_truth_category || 'N/A';
     document.getElementById('diag-cause').textContent = activeResult.agent?.root_cause || 'Root cause under investigation.';
     
@@ -348,12 +331,12 @@ function renderStep(idx) {
 function formatStepTitle(action) {
   switch (action) {
     case 'read_test_file': return 'Initial Test Context & AST Analysis';
-    case 'run_test_in_isolation': return 'Empirical Test Runner: Isolated Execution';
-    case 'run_test_session': return 'Empirical Test Runner: Multi-Run Session Analysis';
-    case 'search_code': return 'Code Search: Inspecting Source Implementation';
-    case 'inspect_git_blame': return 'Git Inspector: History & Blame Forensics';
-    case 'analyze_fixtures': return 'AST Fixture Analyzer: Shared State Audit';
-    case 'self_verify': return 'Self-Verification Gate: Code Grounding Audit';
+    case 'rerun_test': return 'Empirical Multi-Rerun Runner';
+    case 'run_test_in_isolation': return 'Isolated Test Execution';
+    case 'search_code': return 'Code Search: Implementation Inspection';
+    case 'inspect_git_blame': return 'Git Forensics: Blame & Commit Inspection';
+    case 'analyze_fixtures': return 'AST Fixture Analyzer';
+    case 'self_verify': return 'Code Grounding Self-Verification Gate';
     default: return 'Forensic Investigation Step';
   }
 }
@@ -398,25 +381,20 @@ function initStepperControls() {
 
 function getFallbackTrajectory(caseId) {
   return [
-    { step: 1, action: "read_test_file", result: { status: "read", lines: 35 } },
-    { step: 2, action: "run_test_in_isolation", result: { runs: 5, failures: 3, flake_rate: 0.6 } },
-    { step: 3, action: "search_code", result: { matches: 2, file: "src/micro_server.py" } },
-    { step: 4, action: "self_verify", result: { verified: true, line: 24 } }
+    { step: 1, action: "read_test_file", target: "seeded_repo/tests/test.py", result_summary: "Read test file" },
+    { step: 2, action: "rerun_test", runs: 3, failures: 3, flake_rate: 1.0 },
+    { step: 3, action: "self_verify", verified: true, line: 14 }
   ];
 }
 
 function useFallbackData() {
   benchmarkResults = [
-    { id: "case_01", name: "Concurrent Metrics Increment Race Condition", ground_truth_category: "race_condition", baseline: { is_correct: true, predicted_category: "race_condition" }, agent: { is_correct: true, predicted_category: "race_condition", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/counter.py", line_number: 14 } } },
-    { id: "case_10", name: "Socket TIME_WAIT Port Collision", ground_truth_category: "hard_ambiguous_case", baseline: { is_correct: true, predicted_category: "hard_ambiguous_case" }, agent: { is_correct: true, predicted_category: "hard_ambiguous_case", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/micro_server.py", line_number: 24 } } }
+    { id: "case_01", name: "Concurrent Metrics Increment Race Condition", ground_truth_category: "race_condition", baseline: { is_correct: true, predicted_category: "race_condition" }, agent: { is_correct: true, predicted_category: "race_condition", verification_status: "VERIFIED", evidence_citation: { file_path: "seeded_repo/src/counter.py", line_number: 14 } } }
   ];
   renderBenchmarkTable(benchmarkResults);
   renderCaseSelector(benchmarkResults);
 }
 
-// ==========================================
-// Initialization on DOM Load
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
   initThemeController();
   initSectionRail();
